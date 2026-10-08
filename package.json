@@ -1,0 +1,45 @@
+{
+  "name": "openwear",
+  "displayName": "OpenWear - Your Fitting Room",
+  "version": "1.0.0",
+  "description": "Virtual try-on extension powered by Decart Lucy VTON. Drag any clothing image from any website and try it on live via your camera.",
+  "author": "OpenWear",
+  "scripts": {
+    "dev": "plasmo dev",
+    "build": "plasmo build",
+    "package": "plasmo package",
+    "postinstall": "node scripts/patch-dependencies.js"
+  },
+  "dependencies": {
+    "@decartai/sdk": "latest",
+    "@plasmohq/messaging": "^0.7.1",
+    "@plasmohq/storage": "^1.13.0",
+    "plasmo": "^0.90.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.287",
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.1",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.47",
+    "puppeteer-core": "^25.12.0",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.7.2"
+  },
+  "manifest": {
+    "permissions": [
+      "storage",
+      "activeTab",
+      "scripting",
+      "contextMenus",
+      "sidePanel"
+    ],
+    "host_permissions": [
+      "<all_urls>"
+    ],
+    "action": {}
+  }
+}

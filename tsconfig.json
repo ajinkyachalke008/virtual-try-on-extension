@@ -1,0 +1,37 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": [
+      "DOM",
+      "DOM.Iterable",
+      "ESNext"
+    ],
+    "jsx": "react-jsx",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "./build",
+    "baseUrl": ".",
+    "paths": {
+      "~*": [
+        "./src/*"
+      ]
+    }
+  },
+  "include": [
+    ".plasmo/index.d.ts",
+    "src/**/*",
+    ".plasmo/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "build"
+  ]
+}

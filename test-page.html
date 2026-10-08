@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenWear Test Shopping Store 👗</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0c0d12;
+      color: #fff;
+      padding: 32px 24px 80px;
+    }
+    .header {
+      max-width: 1200px;
+      margin: 0 auto 36px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding-bottom: 24px;
+    }
+    .header h1 {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .badge {
+      background: #00FF88;
+      color: #000;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 9999px;
+    }
+    .guide-banner {
+      max-width: 1200px;
+      margin: 0 auto 36px;
+      background: rgba(0, 255, 136, 0.06);
+      border: 1px solid rgba(0, 255, 136, 0.2);
+      border-radius: 14px;
+      padding: 20px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .guide-banner h2 { font-size: 15px; color: #00FF88; }
+    .guide-banner ol { margin-left: 20px; font-size: 13px; color: #ccc; line-height: 1.6; }
+    .grid {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 24px;
+    }
+    .card {
+      background: #14161f;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.06);
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+      position: relative;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+      border-color: rgba(255,255,255,0.15);
+    }
+    .card-img-wrapper {
+      position: relative;
+      width: 100%;
+      height: 320px;
+      background: #1b1e2a;
+    }
+    .card-img-wrapper img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      cursor: grab;
+    }
+    .card-content {
+      padding: 16px;
+    }
+    .category {
+      font-size: 11px;
+      color: #00FF88;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+    .title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+    .price {
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1><span>👗</span> Boutique Noir <span class="badge">OpenWear Demo Store</span></h1>
+    <span style="color: #888; font-size: 13px;">Virtual Try-On Testing Ground</span>
+  </div>
+
+  <div class="guide-banner">
+    <h2>⚡ How to Test OpenWear on this Page:</h2>
+    <ol>
+      <li><strong>Click the floating 👗 button</strong> in the bottom-right corner to open your Virtual Fitting Room.</li>
+      <li><strong>Hover over any garment image below</strong> — a sleek <em>"Try On in Fitting Room"</em> button will appear!</li>
+      <li><strong>Drag and drop any clothing image</strong> directly into the camera drawer.</li>
+      <li><strong>Right-click any image</strong> and choose <em>"Try On with OpenWear 👗"</em>.</li>
+      <li>Watch the high-tech <strong>holographic laser scan filter</strong> align the clothing and synthesize your live try-on via <strong>Decart Lucy VTON</strong>!</li>
+    </ol>
+  </div>
+
+  <div class="grid">
+    <!-- Item 1 -->
+    <div class="card">
+      <div class="card-img-wrapper">
+        <img
+          src="https://images.unsplash.com/photo-1551028719-00167b16eac5?w=600&auto=format&fit=crop&q=80"
+          alt="Emerald Varsity Bomber Jacket"
+          draggable="true"
+        />
+      </div>
+      <div class="card-content">
+        <div class="category">Outerwear</div>
+        <div class="title">Emerald Varsity Bomber Jacket</div>
+        <div class="price">$180</div>
+      </div>
+    </div>
+
+    <!-- Item 2 -->
+    <div class="card">
+      <div class="card-img-wrapper">
+        <img
+          src="https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=600&auto=format&fit=crop&q=80"
+          alt="Obsidian Heavyweight Streetwear Hoodie"
+          draggable="true"
+        />
+      </div>
+      <div class="card-content">
+        <div class="category">Upper Body</div>
+        <div class="title">Obsidian Heavyweight Streetwear Hoodie</div>
+        <div class="price">$95</div>
+      </div>
+    </div>
+
+    <!-- Item 3 -->
+    <div class="card">
+      <div class="card-img-wrapper">
+        <img
+          src="https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=600&auto=format&fit=crop&q=80"
+          alt="Emerald Silk Midi Slip Dress"
+          draggable="true"
+        />
+      </div>
+      <div class="card-content">
+        <div class="category">Dress</div>
+        <div class="title">Emerald Silk Midi Slip Dress</div>
+        <div class="price">$220</div>
+      </div>
+    </div>
+
+    <!-- Item 4 -->
+    <div class="card">
+      <div class="card-img-wrapper">
+        <img
+          src="https://images.unsplash.com/photo-1576995853123-5a10305d93c0?w=600&auto=format&fit=crop&q=80"
+          alt="Vintage Light Wash Denim Jacket"
+          draggable="true"
+        />
+      </div>
+      <div class="card-content">
+        <div class="category">Outerwear</div>
+        <div class="title">Vintage Light Wash Denim Jacket</div>
+        <div class="price">$140</div>
+      </div>
+    </div>
+
+    <!-- Item 5 -->
+    <div class="card">
+      <div class="card-img-wrapper">
+        <img
+          src="https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=600&auto=format&fit=crop&q=80"
+          alt="Minimalist Graphic Cotton T-Shirt"
+          draggable="true"
+        />
+      </div>
+      <div class="card-content">
+        <div class="category">Upper Body</div>
+        <div class="title">Minimalist Graphic Cotton T-Shirt</div>
+        <div class="price">$45</div>
+      </div>
+    </div>
+
+    <!-- Item 6 -->
+    <div class="card">
+      <div class="card-img-wrapper">
+        <img
+          src="https://images.unsplash.com/photo-1509631179647-0177331693ae?w=600&auto=format&fit=crop&q=80"
+          alt="Crimson Oversized Tailored Blazer"
+          draggable="true"
+        />
+      </div>
+      <div class="card-content">
+        <div class="category">Outerwear</div>
+        <div class="title">Crimson Oversized Tailored Blazer</div>
+        <div class="price">$260</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
