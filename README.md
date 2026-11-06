@@ -70,8 +70,8 @@ OpenWear does not ship with a built-in Decart API key. Add your own key in the e
 
 ## 🧪 Testing
 
-```bash
-# Test Decart WebRTC Signaling & Token Generation
+```powershell
+# Test Decart ephemeral-token authentication only (not camera/WebRTC/model output)
 $env:DECART_API_KEY = "your-permanent-Decart-key"
 node test-decart-ws.js
 
