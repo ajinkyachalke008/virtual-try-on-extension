@@ -1,39 +1,43 @@
-const { createDecartClient } = require('@decartai/sdk');
+/**
+ * OpenWear Decart authentication smoke test.
+ *
+ * This test deliberately does not open a raw WebSocket. The supported
+ * realtime transport is managed by @decartai/sdk and LiveKit/WebRTC.
+ *
+ * Usage (PowerShell):
+ *   $env:DECART_API_KEY = "your-permanent-Decart-key"
+ *   node test-decart-ws.js
+ *
+ * The key is read from the environment and is never printed.
+ */
 
-const API_KEY = "dct_extention1_ywgiZVVTOoNqPCqsABCxXKLUtsguIYdrVDIWRiycHcBEwqnAgaEvRSJuoBcUHBBx";
+const { createDecartClient } = require("@decartai/sdk");
 
-async function test() {
-  console.log("Creating ephemeral token...");
-  const client = createDecartClient({ apiKey: API_KEY });
-  const tokenRes = await client.tokens.create();
-  console.log("Token response:", tokenRes);
-  const token = tokenRes.apiKey || tokenRes.token;
+async function main() {
+  const apiKey = process.env.DECART_API_KEY?.trim();
 
-  const wsUrl = `wss://api3.decart.ai/v1/stream?api_key=${encodeURIComponent(token)}&model=lucy-vton-latest`;
-  console.log("Connecting WebSocket to:", wsUrl);
+  if (!apiKey) {
+    console.error("DECART_API_KEY is not set. Provide your own key through the environment.");
+    process.exitCode = 1;
+    return;
+  }
 
-  const ws = new WebSocket(wsUrl);
-  ws.onopen = () => {
-    console.log("WS OPENED! Sending livekit_join...");
-    ws.send(JSON.stringify({
-      type: "livekit_join",
-      passthrough: false,
-    }));
-  };
+  const client = createDecartClient({ apiKey });
+  const tokenResponse = await client.tokens.create({ expiresIn: 300 });
+  const ephemeralToken = tokenResponse?.apiKey || tokenResponse?.token;
 
-  ws.onmessage = (e) => {
-    console.log("WS MESSAGE:", e.data);
-  };
+  console.log("TOKEN_CREATED:", Boolean(ephemeralToken));
+  if (!ephemeralToken) {
+    throw new Error("Decart did not return an ephemeral client token.");
+  }
 
-  ws.onerror = (e) => {
-    console.log("WS ERROR:", e.message || e);
-  };
-
-  ws.onclose = (e) => {
-    console.log(`WS CLOSED: code=${e.code}, reason="${e.reason}"`);
-  };
-
-  await new Promise(r => setTimeout(r, 6000));
+  console.log("TOKEN_TYPE:", ephemeralToken.startsWith("ek_") ? "ephemeral" : "returned-by-SDK");
+  console.log("AUTH_SMOKE_TEST: PASS");
+  console.log("This validates token creation only; browser camera, WebRTC and model output require an extension runtime test.");
 }
 
-test().catch(console.error);
+main().catch((error) => {
+  console.error("AUTH_SMOKE_TEST: FAIL");
+  console.error(error?.message || error);
+  process.exitCode = 1;
+});

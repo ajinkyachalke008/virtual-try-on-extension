@@ -50,6 +50,12 @@ pnpm build
 
 ---
 
+## 🔐 Decart API Key & Security
+
+OpenWear does not ship with a built-in Decart API key. Add your own key in the extension popup; the extension stores it in this browser profile's local extension storage and uses it to request a short-lived client token before opening a realtime session.
+
+**Important:** this repository previously contained a Decart credential in source and test files. Removing it from the current branch does not erase it from Git history. Revoke/rotate any credential that was ever committed, and do not reuse it. For a publicly distributed extension, use a small authenticated server-side token broker so the permanent Decart key never needs to be present in the browser.
+
 ## 📦 Loading the Extension into Browser
 
 1. Open **Google Chrome** or **Microsoft Edge**.
@@ -64,8 +70,9 @@ pnpm build
 
 ## 🧪 Testing
 
-```bash
-# Test Decart WebRTC Signaling & Token Generation
+```powershell
+# Test Decart ephemeral-token authentication only (not camera/WebRTC/model output)
+$env:DECART_API_KEY = "your-permanent-Decart-key"
 node test-decart-ws.js
 
 # Run Automated End-to-End Test in Browser

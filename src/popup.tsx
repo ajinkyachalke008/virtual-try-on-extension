@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react"
 import {
-  DEFAULT_API_KEY,
   getStoredApiKey,
   setStoredApiKey,
   validateApiKey,
@@ -19,8 +18,7 @@ function Popup() {
 
   useEffect(() => {
     getStoredApiKey().then((key) => {
-      setApiKey(key || DEFAULT_API_KEY)
-      // Check initial key validation
+      setApiKey(key)
       if (key) {
         validateApiKey(key).then(setValidationResult)
       }
@@ -28,24 +26,31 @@ function Popup() {
   }, [])
 
   const handleSave = useCallback(async () => {
-    if (!apiKey.trim()) return
-    setIsValidating(true)
-    const result = await validateApiKey(apiKey.trim())
-    setIsValidating(false)
-    setValidationResult(result)
+    const candidate = apiKey.trim()
+    if (!candidate) {
+      setValidationResult({ valid: false, error: "Enter a Decart API key." })
+      return
+    }
 
-    await setStoredApiKey(apiKey.trim())
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+    setIsValidating(true)
+    try {
+      const result = await validateApiKey(candidate)
+      setValidationResult(result)
+      if (!result.valid) return
+
+      await setStoredApiKey(candidate)
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    } finally {
+      setIsValidating(false)
+    }
   }, [apiKey])
 
-  const handleResetDefault = useCallback(async () => {
-    setApiKey(DEFAULT_API_KEY)
-    await setStoredApiKey(DEFAULT_API_KEY)
-    setIsValidating(true)
-    const result = await validateApiKey(DEFAULT_API_KEY)
-    setIsValidating(false)
-    setValidationResult(result)
+  const handleClearKey = useCallback(async () => {
+    await setStoredApiKey("")
+    setApiKey("")
+    setValidationResult(null)
+    setSaved(false)
   }, [])
 
   const handleOpenRoomOnTab = useCallback(async () => {
@@ -248,7 +253,7 @@ function Popup() {
             {saved ? "✓ Saved" : isValidating ? "Testing..." : "Save Key"}
           </button>
           <button
-            onClick={handleResetDefault}
+            onClick={handleClearKey}
             style={{
               padding: "10px 14px",
               borderRadius: 8,
@@ -258,7 +263,7 @@ function Popup() {
               fontSize: 12,
               cursor: "pointer",
             }}>
-            Reset
+            Clear Key
           </button>
         </div>
 

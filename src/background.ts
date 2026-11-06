@@ -9,19 +9,13 @@
  */
 
 import {
-  DEFAULT_API_KEY,
   getStoredApiKey,
   setStoredApiKey,
   validateApiKey,
 } from "~lib/decart"
 
 // --- Context Menus ---
-chrome.runtime.onInstalled.addListener(async () => {
-  const currentKey = await getStoredApiKey()
-  if (!currentKey) {
-    await setStoredApiKey(DEFAULT_API_KEY)
-  }
-
+chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.removeAll(() => {
     chrome.contextMenus.create({
       id: "openwear-tryon-image",
@@ -77,7 +71,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "GET_API_KEY") {
     getStoredApiKey()
       .then((apiKey) => sendResponse({ apiKey }))
-      .catch(() => sendResponse({ apiKey: DEFAULT_API_KEY }))
+      .catch(() => sendResponse({ apiKey: "" }))
     return true
   }
 
@@ -113,62 +107,72 @@ async function fetchImageBlobAndBase64(url: string): Promise<{
   size: number
   mimeType: string
 }> {
-  if (!url) throw new Error("No URL provided")
+  if (typeof url !== "string" || !url.trim()) {
+    throw new Error("No image URL provided.")
+  }
 
-  // Handle data URLs directly
+  // Only accept image data URLs or ordinary HTTP(S) URLs. Never let this
+  // extension background worker fetch arbitrary schemes such as file:, chrome:, or javascript:.
   if (url.startsWith("data:image/")) {
-    const parts = url.split(",")
-    const mimeMatch = parts[0].match(/:(.*?);/)
-    const mimeType = mimeMatch ? mimeMatch[1] : "image/png"
-    const binary = atob(parts[1] || "")
+    const commaIndex = url.indexOf(",")
+    if (commaIndex < 0) throw new Error("Invalid image data URL.")
+    const header = url.slice(0, commaIndex)
+    const mimeType = header.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64$/)?.[1]
+    if (!mimeType) throw new Error("Only base64-encoded image data URLs are supported.")
+    const binary = atob(url.slice(commaIndex + 1))
     const size = binary.length
-    return {
-      base64: url,
-      size,
-      mimeType,
-    }
+    if (size === 0) throw new Error("The supplied image data is empty.")
+    return { base64: url, size, mimeType }
+  }
+
+  let parsedUrl: URL
+  try {
+    parsedUrl = new URL(url)
+  } catch {
+    throw new Error("The image source is not a valid URL.")
+  }
+  if (parsedUrl.protocol !== "https:" && parsedUrl.protocol !== "http:") {
+    throw new Error("Only HTTP and HTTPS image URLs are supported.")
   }
 
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 15000)
 
   try {
-    const response = await fetch(url, {
+    const response = await fetch(parsedUrl.href, {
       mode: "cors",
       credentials: "omit",
+      redirect: "follow",
       signal: controller.signal,
     })
-    clearTimeout(timeout)
 
     if (!response.ok) {
-      throw new Error(`HTTP error ${response.status}`)
+      throw new Error(`Image request failed with HTTP ${response.status}.`)
     }
 
     const blob = await response.blob()
-    const mimeType = blob.type || "image/png"
-    const size = blob.size
+    const mimeType = blob.type || response.headers.get("content-type")?.split(";")[0] || ""
+    if (blob.size === 0) throw new Error("The image server returned an empty file.")
+    if (!mimeType.toLowerCase().startsWith("image/")) {
+      throw new Error(`The source did not return an image (received ${mimeType || "unknown content type"}).`)
+    }
 
     const base64 = await new Promise<string>((resolve, reject) => {
       const reader = new FileReader()
       reader.onloadend = () => {
-        if (typeof reader.result === "string") {
+        if (typeof reader.result === "string" && reader.result.startsWith("data:image/")) {
           resolve(reader.result)
         } else {
-          reject(new Error("FileReader did not return a string"))
+          reject(new Error("Image conversion did not produce a valid image data URL."))
         }
       }
-      reader.onerror = reject
+      reader.onerror = () => reject(reader.error || new Error("Failed to read image blob."))
       reader.readAsDataURL(blob)
     })
 
-    return {
-      base64,
-      size,
-      mimeType,
-    }
-  } catch (err) {
+    return { base64, size: blob.size, mimeType }
+  } finally {
     clearTimeout(timeout)
-    throw err
   }
 }
 
