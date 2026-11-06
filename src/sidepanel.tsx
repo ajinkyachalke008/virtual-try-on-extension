@@ -18,6 +18,22 @@ import {
 } from "~lib/decart"
 import "./style.css"
 
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timeoutId = window.setTimeout(() => reject(new Error(message)), timeoutMs)
+    promise.then(
+      (value) => {
+        window.clearTimeout(timeoutId)
+        resolve(value)
+      },
+      (error) => {
+        window.clearTimeout(timeoutId)
+        reject(error)
+      }
+    )
+  })
+}
+
 function SidePanel() {
   const [isDragOver, setIsDragOver] = useState(false)
   const [garmentImage, setGarmentImage] = useState<string | null>(null)
@@ -31,6 +47,8 @@ function SidePanel() {
   const streamRef = useRef<MediaStream | null>(null)
   const sessionRef = useRef<DecartSession | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const remoteStreamTimeoutRef = useRef<number | null>(null)
+  const hasRemoteStreamRef = useRef(false)
 
   // Start Camera on Mount
   useEffect(() => {
@@ -67,8 +85,13 @@ function SidePanel() {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((t) => t.stop())
       }
+      if (remoteStreamTimeoutRef.current !== null) {
+        clearTimeout(remoteStreamTimeoutRef.current)
+        remoteStreamTimeoutRef.current = null
+      }
       if (sessionRef.current) {
         sessionRef.current.disconnect()
+        sessionRef.current = null
       }
     }
   }, [])
@@ -76,57 +99,120 @@ function SidePanel() {
   const executeTryOn = useCallback(
     async (blob: Blob, imageBase64: string, title: string) => {
       console.log("GARMENT_BLOB_SIZE:", blob.size)
+      if (blob.size === 0) {
+        setIsScanning(false)
+        setError("The garment image is empty. Choose another image or check the image source.")
+        return
+      }
+      if (blob.type && !blob.type.startsWith("image/")) {
+        setIsScanning(false)
+        setError(`Unsupported garment file type: ${blob.type}`)
+        return
+      }
+
       setGarmentImage(imageBase64)
       setGarmentInfo(title)
       setIsScanning(true)
-      setStatusText("Scanning garment & connecting...")
+      setStatusText("Connecting to Decart and preparing garment...")
       setError(null)
 
       try {
         const apiKey = await getStoredApiKey()
         if (!apiKey) {
-          throw new Error("No Decart API key found.")
+          throw new Error("No Decart API key found. Enter your own key in the OpenWear popup.")
         }
-        if (!streamRef.current) {
-          throw new Error("Camera stream not available.")
+
+        const localStream = streamRef.current
+        if (!localStream || !localStream.getVideoTracks().some((track) => track.readyState === "live")) {
+          throw new Error("Camera stream is not available or has no live video track.")
         }
 
         const category = detectCategory(title)
 
-        if (sessionRef.current?.realtimeClient?.isConnected?.()) {
-          setStatusText("Updating garment...")
-          await applyTryOn(sessionRef.current.realtimeClient, blob, category, title)
-          setTimeout(() => {
-            setIsScanning(false)
-            setHasResult(true)
-            setStatusText("Live Try-On Active ✨")
-          }, 1200)
+        if (sessionRef.current) {
+          await withTimeout(
+            applyTryOn(sessionRef.current.realtimeClient, blob, category, title),
+            35000,
+            "Decart did not acknowledge the garment update within 35 seconds."
+          )
+          setIsScanning(false)
+          setHasResult(true)
+          setStatusText("Live Try-On Active ✨")
           return
         }
 
-        setStatusText("Synthesizing live video...")
-
-        const session = await connectRealtime(
+        hasRemoteStreamRef.current = false
+        const connectPromise = connectRealtime(
           apiKey,
-          streamRef.current,
+          localStream,
           (remoteStream) => {
-            console.log("REMOTE_STREAM_RECEIVED:", !!remoteStream)
+            console.log("REMOTE_STREAM_RECEIVED:", Boolean(remoteStream))
+            hasRemoteStreamRef.current = true
+            if (remoteStreamTimeoutRef.current !== null) {
+              clearTimeout(remoteStreamTimeoutRef.current)
+              remoteStreamTimeoutRef.current = null
+            }
             if (videoRef.current) {
               videoRef.current.srcObject = remoteStream
-              videoRef.current.play().catch(console.error)
+              videoRef.current.play().catch((playError) => {
+                console.error("[OpenWear SidePanel] Remote video playback failed:", playError)
+              })
             }
             setIsScanning(false)
             setHasResult(true)
             setStatusText("Live Try-On Active ✨")
           }
         )
+
+        let session: DecartSession
+        try {
+          session = await withTimeout(
+            connectPromise,
+            45000,
+            "Decart realtime connection timed out after 45 seconds."
+          )
+        } catch (connectError) {
+          void connectPromise.then((lateSession) => lateSession.disconnect()).catch(() => {})
+          throw connectError
+        }
+
         sessionRef.current = session
 
-        await applyTryOn(session.realtimeClient, blob, category, title)
+        // First garment must be sent explicitly after the realtime connection is established.
+        await withTimeout(
+          applyTryOn(session.realtimeClient, blob, category, title),
+          35000,
+          "Decart did not acknowledge the garment image within 35 seconds."
+        )
+
+        if (!hasRemoteStreamRef.current) {
+          setStatusText("Garment sent — waiting for the transformed video stream...")
+          remoteStreamTimeoutRef.current = window.setTimeout(() => {
+            remoteStreamTimeoutRef.current = null
+            setIsScanning(false)
+            setHasResult(false)
+            setError("Decart connected but no transformed video stream arrived. Check WebRTC connectivity and API-key access.")
+            setStatusText("No transformed stream received")
+            sessionRef.current?.disconnect()
+            sessionRef.current = null
+          }, 30000)
+        } else {
+          setIsScanning(false)
+          setHasResult(true)
+          setStatusText("Live Try-On Active ✨")
+        }
       } catch (err: any) {
+        if (remoteStreamTimeoutRef.current !== null) {
+          clearTimeout(remoteStreamTimeoutRef.current)
+          remoteStreamTimeoutRef.current = null
+        }
+        sessionRef.current?.disconnect()
+        sessionRef.current = null
         console.error("[OpenWear SidePanel] Error:", err)
         setIsScanning(false)
+        setHasResult(false)
         setError(`Try-on error: ${err?.message || "Failed"}`)
+        setStatusText("Try-on failed")
       }
     },
     []
