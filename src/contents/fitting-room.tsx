@@ -42,6 +42,22 @@ type DrawerState =
   | "scanning"
   | "tryon"
 
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timeoutId = window.setTimeout(() => reject(new Error(message)), timeoutMs)
+    promise.then(
+      (value) => {
+        window.clearTimeout(timeoutId)
+        resolve(value)
+      },
+      (error) => {
+        window.clearTimeout(timeoutId)
+        reject(error)
+      }
+    )
+  })
+}
+
 function FittingRoom() {
   // --- States ---
   const [drawerState, setDrawerState] = useState<DrawerState>("closed")
@@ -68,6 +84,8 @@ function FittingRoom() {
   const personCheckRef = useRef<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const fallbackTimerRef = useRef<number | null>(null)
+  const remoteStreamTimeoutRef = useRef<number | null>(null)
+  const hasRemoteStreamRef = useRef(false)
 
   // Load API key on mount
   useEffect(() => {
@@ -208,6 +226,11 @@ function FittingRoom() {
   // --- Close Drawer ---
   const closeDrawer = useCallback(() => {
     if (fallbackTimerRef.current) clearTimeout(fallbackTimerRef.current)
+    if (remoteStreamTimeoutRef.current !== null) {
+      clearTimeout(remoteStreamTimeoutRef.current)
+      remoteStreamTimeoutRef.current = null
+    }
+    hasRemoteStreamRef.current = false
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((t) => t.stop())
       streamRef.current = null
@@ -291,69 +314,134 @@ function FittingRoom() {
   const processTryOn = useCallback(
     async (blob: Blob, base64: string, title: string) => {
       console.log("GARMENT_BLOB_SIZE:", blob.size)
+      if (blob.size < 1024) {
+        console.warn("[OpenWear] Garment image is under 1 KB; verify that the source is a real product image.")
+      }
       if (blob.size === 0) {
-        showToast("Error: Image blob is empty (0 bytes). Check CORS or network.")
+        showToast("The garment image is empty. Check the source image or CORS fetch.")
         setIsScanning(false)
+        setStatusText("Image load failed")
         return
+      }
+      if (blob.type && !blob.type.startsWith("image/")) {
+        throw new Error(`Unsupported garment file type: ${blob.type}`)
       }
 
       setGarmentImage(base64)
       setGarmentInfo(title)
       setDrawerState("scanning")
       setIsScanning(true)
-      setStatusText("Scanning garment & establishing Decart connection...")
+      setStatusText("Connecting to Decart and preparing garment...")
       setError(null)
 
       try {
         const permanentKey = await getStoredApiKey()
         if (!permanentKey) {
-          throw new Error("No Decart API key configured. Enter your key in Settings ⚙️.")
+          throw new Error("No Decart API key configured. Add your own key in the OpenWear popup.")
         }
 
-        if (!streamRef.current) {
-          throw new Error("Camera stream not available. Please allow camera or activate Demo Mode.")
+        const localStream = streamRef.current
+        if (!localStream || !localStream.getVideoTracks().some((track) => track.readyState === "live")) {
+          throw new Error("A live camera stream is not available. Allow camera access and reopen the fitting room.")
         }
 
         const category = detectCategory(title)
 
-        // If an active session already exists, swap outfit immediately
-        if (sessionRef.current?.realtimeClient?.isConnected?.()) {
-          setStatusText("Switching outfit via Decart Lucy...")
-          await applyTryOn(sessionRef.current.realtimeClient, blob, category, title)
-          // Scanning will be cleared when the new stream renders or after short delay
-          setTimeout(() => {
+        // Reuse a live session for outfit changes; setImage must be called for every garment.
+        if (sessionRef.current) {
+          try {
+            await withTimeout(
+              applyTryOn(sessionRef.current.realtimeClient, blob, category, title),
+              35000,
+              "Decart did not acknowledge the garment update within 35 seconds."
+            )
             setIsScanning(false)
             setHasResult(true)
-            setStatusText("Try-On Complete ✨")
-          }, 1200)
-          return
+            setDrawerState("tryon")
+            setStatusText("Live Try-On Active ✨")
+            return
+          } catch (updateError) {
+            sessionRef.current.disconnect()
+            sessionRef.current = null
+            throw updateError
+          }
         }
 
-        // Build prompt and establish Realtime WebRTC connection using ephemeral token
-        const prompt = buildDetailedPrompt(category, title)
-        const session = await connectRealtime(
+        hasRemoteStreamRef.current = false
+        const connectPromise = connectRealtime(
           permanentKey,
-          streamRef.current,
+          localStream,
           (remoteStream: MediaStream) => {
-            // STEP 2 d: onRemoteStream attaches stream, ends scanning, sets result
-            if (videoRef.current) {
-              videoRef.current.srcObject = remoteStream
-              videoRef.current.play().catch(console.error)
+            console.log("REMOTE_STREAM_RECEIVED:", Boolean(remoteStream))
+            hasRemoteStreamRef.current = true
+
+            if (remoteStreamTimeoutRef.current !== null) {
+              clearTimeout(remoteStreamTimeoutRef.current)
+              remoteStreamTimeoutRef.current = null
             }
+
+            const outputVideo = videoRef.current
+            if (outputVideo) {
+              outputVideo.srcObject = remoteStream
+              outputVideo.play().catch((playError) => {
+                console.error("[OpenWear] Could not play Decart remote stream:", playError)
+              })
+            }
+
             setIsScanning(false)
             setHasResult(true)
-            setStatusText("Try-On Complete ✨")
-          },
-          { image: blob, prompt }
+            setDrawerState("tryon")
+            setStatusText("Live Try-On Active ✨")
+          }
         )
+
+        let session: DecartSession
+        try {
+          session = await withTimeout(
+            connectPromise,
+            45000,
+            "Decart realtime connection timed out after 45 seconds."
+          )
+        } catch (connectError) {
+          // If the SDK finishes connecting after our UI timeout, close the late session.
+          void connectPromise.then((lateSession) => lateSession.disconnect()).catch(() => {})
+          throw connectError
+        }
+
         sessionRef.current = session
+
+        // The official Lucy VTON flow is connect first, then send the garment with setImage.
+        await withTimeout(
+          applyTryOn(session.realtimeClient, blob, category, title),
+          35000,
+          "Decart did not acknowledge the garment image within 35 seconds."
+        )
+
+        setStatusText("Garment sent — waiting for the transformed video stream...")
+        if (!hasRemoteStreamRef.current) {
+          remoteStreamTimeoutRef.current = window.setTimeout(() => {
+            remoteStreamTimeoutRef.current = null
+            setIsScanning(false)
+            setHasResult(false)
+            setError("Decart connected but no transformed video stream arrived. Check WebRTC connectivity, API-key permissions, and the browser console.")
+            setStatusText("No transformed stream received")
+            sessionRef.current?.disconnect()
+            sessionRef.current = null
+          }, 30000)
+        }
       } catch (err: any) {
-        console.error("[OpenWear] Try-on failed:", err)
-        // STEP 2 e: If setImage/connect fails, stop scanning and show toast
+        if (remoteStreamTimeoutRef.current !== null) {
+          clearTimeout(remoteStreamTimeoutRef.current)
+          remoteStreamTimeoutRef.current = null
+        }
+        sessionRef.current?.disconnect()
+        sessionRef.current = null
         setIsScanning(false)
+        setHasResult(false)
         setError(err?.message || "Virtual try-on failed.")
         showToast(err?.message || "Virtual try-on error")
         setStatusText("Try-on failed")
+        console.error("[OpenWear] Try-on failed:", err)
       }
     },
     [showToast]
