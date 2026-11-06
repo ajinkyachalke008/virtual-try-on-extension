@@ -12,12 +12,6 @@
 
 import { createDecartClient, models } from "@decartai/sdk"
 
-export const DEFAULT_API_KEY =
-  "dct_extention1_ywgiZVVTOoNqPCqsABCxXKLUtsguIYdrVDIWRiycHcBEwqnAgaEvRSJuoBcUHBBx"
-
-const OLD_EXPIRED_KEY =
-  "dct_extention_YbDQJWJkiNPWInmjgPEPKRWvJGUdOITHKhgHNZHOPzDFfPUqosxbriUpTxwYKRwR"
-
 export type GarmentCategory =
   | "upper_body"
   | "lower_body"
@@ -41,63 +35,61 @@ export interface SampleGarment {
 const VTON_MODEL = models.realtime("lucy-vton-latest")
 
 /**
- * Retrieve the permanent Decart API key across local/sync storage.
- * Falls back to DEFAULT_API_KEY so users can immediately test without setup.
- * Automatically clears the old expired key if found in user storage.
+ * Read the user's own Decart key from extension storage.
+ * A permanent API key is never bundled into the extension source.
  */
 export async function getStoredApiKey(): Promise<string> {
   try {
-    if (typeof chrome !== "undefined" && chrome.storage) {
-      if (chrome.storage.sync) {
-        const sync = await chrome.storage.sync.get(["decart_api_key", "DECART_API_KEY"])
-        let val = sync?.decart_api_key || sync?.DECART_API_KEY
-        if (typeof val === "string") {
-          if (val.startsWith('"') && val.endsWith('"')) {
-            try { val = JSON.parse(val) } catch {}
-          }
-          if (val && val.trim()) {
-            if (val.trim() === OLD_EXPIRED_KEY) {
-              await setStoredApiKey(DEFAULT_API_KEY)
-              return DEFAULT_API_KEY
-            }
-            return val.trim()
-          }
-        }
-      }
-      if (chrome.storage.local) {
-        const local = await chrome.storage.local.get(["decart_api_key", "DECART_API_KEY"])
-        const val = local?.decart_api_key || local?.DECART_API_KEY
-        if (val && typeof val === "string" && val.trim()) {
-          if (val.trim() === OLD_EXPIRED_KEY) {
-            await setStoredApiKey(DEFAULT_API_KEY)
-            return DEFAULT_API_KEY
-          }
-          return val.trim()
-        }
-      }
+    if (typeof chrome === "undefined" || !chrome.storage) return ""
+
+    const local = chrome.storage.local
+      ? await chrome.storage.local.get(["decart_api_key", "DECART_API_KEY"])
+      : {}
+    const localValue = local?.decart_api_key || local?.DECART_API_KEY
+
+    if (typeof localValue === "string" && localValue.trim()) {
+      return localValue.trim()
     }
-  } catch (e) {
-    console.warn("[OpenWear] Error accessing storage for API key:", e)
+
+    // Read the old sync key once for compatibility with previous installs.
+    const sync = chrome.storage.sync
+      ? await chrome.storage.sync.get(["decart_api_key", "DECART_API_KEY"])
+      : {}
+    const syncValue = sync?.decart_api_key || sync?.DECART_API_KEY
+
+    if (typeof syncValue === "string" && syncValue.trim()) {
+      const value = syncValue.trim()
+      if (chrome.storage.local) {
+        await chrome.storage.local.set({ decart_api_key: value })
+      }
+      return value
+    }
+  } catch (error) {
+    console.warn("[OpenWear] Could not read Decart API key from extension storage:", error)
   }
-  return DEFAULT_API_KEY
+
+  return ""
 }
 
 /**
- * Save permanent Decart API key across storage layers.
+ * Store the user's key locally in this browser profile only.
+ * Remove legacy sync copies so the permanent key is not propagated across devices.
  */
 export async function setStoredApiKey(key: string): Promise<void> {
   const trimmed = key.trim()
-  try {
-    if (typeof chrome !== "undefined" && chrome.storage) {
-      if (chrome.storage.sync) {
-        await chrome.storage.sync.set({ decart_api_key: trimmed, DECART_API_KEY: trimmed })
-      }
-      if (chrome.storage.local) {
-        await chrome.storage.local.set({ decart_api_key: trimmed, DECART_API_KEY: trimmed })
-      }
-    }
-  } catch (e) {
-    console.warn("[OpenWear] Error saving API key to storage:", e)
+
+  if (typeof chrome === "undefined" || !chrome.storage?.local) {
+    throw new Error("Chrome extension storage is unavailable.")
+  }
+
+  if (trimmed) {
+    await chrome.storage.local.set({ decart_api_key: trimmed })
+  } else {
+    await chrome.storage.local.remove(["decart_api_key", "DECART_API_KEY"])
+  }
+
+  if (chrome.storage.sync) {
+    await chrome.storage.sync.remove(["decart_api_key", "DECART_API_KEY"])
   }
 }
 
@@ -106,14 +98,19 @@ export async function setStoredApiKey(key: string): Promise<void> {
  * Official requirement: permanent dct_* key must NOT be passed to realtime.connect directly.
  */
 export async function createEphemeralToken(permanentKey: string): Promise<string> {
-  const cleanKey = permanentKey.trim() || DEFAULT_API_KEY
+  const cleanKey = permanentKey.trim()
+  if (!cleanKey) {
+    throw new Error("Add your Decart API key in the OpenWear popup first.")
+  }
+
+  // Client tokens are short-lived. Mint immediately before the realtime connection.
   const permanentClient = createDecartClient({ apiKey: cleanKey })
-  const tokenRes = await permanentClient.tokens.create()
+  const tokenRes = await permanentClient.tokens.create({ expiresIn: 300 })
   const ephemeralKey = tokenRes?.apiKey || tokenRes?.token
 
-  console.log("TOKEN_CREATED:", !!ephemeralKey)
+  console.log("TOKEN_CREATED:", Boolean(ephemeralKey))
   if (!ephemeralKey) {
-    throw new Error("Decart server did not return a valid ephemeral client token.")
+    throw new Error("Decart did not return a client token. Check the API key and account access.")
   }
   return ephemeralKey
 }
@@ -206,43 +203,32 @@ export function buildDetailedPrompt(
 export async function connectRealtime(
   permanentKey: string,
   localStream: MediaStream,
-  onRemoteStream: (stream: MediaStream) => void,
-  initialGarment?: { image: Blob | string; prompt: string }
+  onRemoteStream: (stream: MediaStream) => void
 ): Promise<DecartSession> {
-  // Step 1 & 2: Generate ephemeral token
-  const ephemeralKey = await createEphemeralToken(permanentKey)
+  if (!localStream || !localStream.getVideoTracks().some((track) => track.readyState === "live")) {
+    throw new Error("The camera stream is missing or has no live video track.")
+  }
 
-  // Step 3: Connect realtime with ephemeral token (telemetry disabled for extension safety)
+  // Mint immediately before connecting; never pass the permanent key to realtime.connect().
+  const ephemeralKey = await createEphemeralToken(permanentKey)
   const client = createDecartClient({ apiKey: ephemeralKey, telemetry: false })
 
-  const connectOptions: any = {
+  const realtimeClient = await client.realtime.connect(localStream, {
     model: VTON_MODEL,
     mirror: "auto",
-    onRemoteStream: (stream: MediaStream) => {
-      console.log("REMOTE_STREAM_RECEIVED:", !!stream)
-      onRemoteStream(stream)
+    onRemoteStream: (remoteStream: MediaStream) => {
+      console.log("REMOTE_STREAM_RECEIVED:", Boolean(remoteStream))
+      onRemoteStream(remoteStream)
     },
-  }
-
-  if (initialGarment?.image) {
-    connectOptions.initialState = {
-      image: initialGarment.image,
-      prompt: {
-        text: initialGarment.prompt,
-        enhance: false,
-      },
-    }
-  }
-
-  const realtimeClient = await client.realtime.connect(localStream, connectOptions)
+  })
 
   return {
     realtimeClient,
     disconnect: () => {
       try {
         realtimeClient.disconnect()
-      } catch (e) {
-        console.warn("[OpenWear] Disconnect error:", e)
+      } catch (error) {
+        console.warn("[OpenWear] Disconnect error:", error)
       }
     },
   }
