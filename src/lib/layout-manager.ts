@@ -211,3 +211,4 @@ export function deactivateSplitLayout(): void {
 export function isSplitLayoutActive(): boolean {
   return isSplitActive
 }
+

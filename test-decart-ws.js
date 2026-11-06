@@ -1,6 +1,6 @@
 const { createDecartClient } = require('@decartai/sdk');
 
-const API_KEY = "dct_extention1_ywgiZVVTOoNqPCqsABCxXKLUtsguIYdrVDIWRiycHcBEwqnAgaEvRSJuoBcUHBBx";
+const API_KEY = process.env.DECART_API_KEY || "dct_your_api_key_here";
 
 async function test() {
   console.log("Creating ephemeral token...");
