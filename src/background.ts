@@ -9,19 +9,13 @@
  */
 
 import {
-  DEFAULT_API_KEY,
   getStoredApiKey,
   setStoredApiKey,
   validateApiKey,
 } from "~lib/decart"
 
 // --- Context Menus ---
-chrome.runtime.onInstalled.addListener(async () => {
-  const currentKey = await getStoredApiKey()
-  if (!currentKey) {
-    await setStoredApiKey(DEFAULT_API_KEY)
-  }
-
+chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.removeAll(() => {
     chrome.contextMenus.create({
       id: "openwear-tryon-image",
@@ -77,7 +71,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "GET_API_KEY") {
     getStoredApiKey()
       .then((apiKey) => sendResponse({ apiKey }))
-      .catch(() => sendResponse({ apiKey: DEFAULT_API_KEY }))
+      .catch(() => sendResponse({ apiKey: "" }))
     return true
   }
 
