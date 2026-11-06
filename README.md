@@ -1,19 +1,31 @@
-# OpenWear - Realtime Virtual Try-On Chrome Extension 👗✨
+# OpenWear - All-in-One AI Virtual Try-On & Studio Extension 👗✨
 
-OpenWear is an AI-powered browser extension built with **Plasmo** and **Decart Lucy VTON** (`lucy-vton-latest`). It turns any webpage into an interactive fitting room: simply drag and drop clothing images from any e-commerce site or choose from the curated wardrobe to try clothes on live via your webcam in realtime.
+OpenWear is an advanced AI virtual fitting room extension built with **Plasmo**, **Decart Lucy VTON** (`lucy-vton-latest`), and an in-browser **Photorealistic Studio Engine**. It turns any e-commerce page into your personal fitting studio: try on clothing live via your webcam, try on curated model presets or uploaded photos without a camera, manage your personal fashion wardrobe, and export HD Lookbook snapshots.
 
 ---
 
 ## 🌟 Key Features
 
-- **Decart Lucy VTON Realtime WebRTC**: Direct low-latency peer-to-peer video streaming powered by Decart's `lucy-vton-latest` model.
-- **Side Panel Drawer CSUI**: Injected into any webpage via Shadow DOM (`openwear-fitting-room`), ensuring zero CSS style leaking.
-- **Smart Image Proxying**: Chrome background service worker fetches clothing images across CORS boundaries and feeds high-res blobs directly into Decart.
-- **Holographic Laser Scanning Effect**: Animated laser sweep and grid animation while clothing is scanned onto the user.
-- **Person Centering Heuristic & Fallback**: Fast silhouette positioning check with a 2-second automatic fallback to keep the experience seamless.
-- **Instant Garment Wardrobe**: 4 built-in clean flat-lay garments (Bomber Jacket, Streetwear Hoodie, Silk Slip Dress, Denim Jacket) for 1-click try-on.
-- **Custom Image Upload & Drag-and-Drop**: Drag clothing from any website (Zara, ASOS, H&M, Amazon, Unsplash) or upload local files.
-- **In-App API Key Management**: Settings modal allows entering custom Decart API keys saved to `chrome.storage.sync`.
+- **Dual-Engine Virtual Fitting Studio**:
+  - **🎥 Live Cam Mode**: Realtime low-latency video try-on powered by Decart's `lucy-vton-latest` WebRTC stream.
+  - **📷 Photo Studio Mode**: Try on apparel without a camera using 4 diverse preset models (Elena, Marcus, Alex, Maya) or your own photo upload. Supports both **Canvas-to-WebRTC Stream Bridge** and **Instant Photorealistic Composite Preview**.
+  - **⇄ Before/After Comparison Slider**: Drag handle to smoothly compare the original model against the tried-on garment.
+- **👗 My Wardrobe Collection**:
+  - Persistent collection stored in `chrome.storage.local`.
+  - Scrapes item title, price tag, store domain, and product category (`Tops`, `Bottoms`, `Dresses`, `Outerwear`).
+  - 1-click try-on and instant outfit swapping.
+- **📸 Lookbook & Snapshot Studio**:
+  - 1-click camera snapshot on live video and photo try-on viewports.
+  - Generates branded 1080×1350 social Lookbook polaroid cards with garment tags and date stamps.
+  - 1-click HD PNG download and local lookbook gallery.
+- **🛍️ Smart Dual Hover Scraper**:
+  - Automatically identifies clothing photos on shopping sites (Amazon, Zara, Myntra, ASOS, H&M, etc.).
+  - Floating dual action pill: **"👗 Try On"** (with live scraped price tag) and **"➕ Wardrobe"**.
+- **Side Panel Drawer & Native SidePanel**:
+  - Zero CSS leaking via Shadow DOM (`openwear-fitting-room`).
+  - Full-featured companion in Chrome's native Side Panel (`sidepanel.html`).
+- **In-App API Key Management**:
+  - Realtime validation and storage synchronization for Decart Lucy VTON keys.
 
 ---
 
@@ -65,10 +77,13 @@ pnpm build
 ## 🧪 Testing
 
 ```bash
-# Test Decart WebRTC Signaling & Token Generation
+# Run Comprehensive End-to-End Test (All 4 Tabs, Presets, Wardrobe & Hover Buttons)
+node test-e2e-studio.js
+
+# Test Decart WebRTC Signaling & Ephemeral Token Generation
 node test-decart-ws.js
 
-# Run Automated End-to-End Test in Browser
+# Run Automated Edge Browser Test
 node test-full-edge.js
 ```
 

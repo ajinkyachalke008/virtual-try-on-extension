@@ -13,10 +13,10 @@
 import { createDecartClient, models } from "@decartai/sdk"
 
 export const DEFAULT_API_KEY =
-  "dct_extention1_ywgiZVVTOoNqPCqsABCxXKLUtsguIYdrVDIWRiycHcBEwqnAgaEvRSJuoBcUHBBx"
+  "dct_aj_ZZpXOeeUYfspZamVyXkaegSKqAuhiInPFrrECfbJzhVghokEdQAHAfnCEYYZiIaH"
 
 const OLD_EXPIRED_KEY =
-  "dct_extention_YbDQJWJkiNPWInmjgPEPKRWvJGUdOITHKhgHNZHOPzDFfPUqosxbriUpTxwYKRwR"
+  "dct_extention1_ywgiZVVTOoNqPCqsABCxXKLUtsguIYdrVDIWRiycHcBEwqnAgaEvRSJuoBcUHBBx"
 
 export type GarmentCategory =
   | "upper_body"
@@ -284,6 +284,13 @@ export function dataUrlToBlob(dataUrl: string): Blob {
   return new Blob([bytes], { type: mime })
 }
 
+import {
+  GARMENT_BOMBER_BASE64,
+  GARMENT_HOODIE_BASE64,
+  GARMENT_DRESS_BASE64,
+  GARMENT_DENIM_BASE64,
+} from "./preset-garments-data"
+
 /**
  * Curated clean-background flat-lay garments (official Decart best practice).
  */
@@ -293,7 +300,7 @@ export const SAMPLE_GARMENTS: SampleGarment[] = [
     name: "Black Leather Bomber Jacket",
     category: "outerwear",
     prompt: "Substitute the current top with a premium black leather bomber jacket with ribbed cuffs, front metallic zipper, and a relaxed tailored fit.",
-    imageUrl: "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=600&auto=format&fit=crop&q=80",
+    imageUrl: GARMENT_BOMBER_BASE64,
     badge: "Outerwear",
   },
   {
@@ -301,7 +308,7 @@ export const SAMPLE_GARMENTS: SampleGarment[] = [
     name: "Heavyweight Streetwear Hoodie",
     category: "upper_body",
     prompt: "Substitute the current top with a clean heavyweight streetwear hoodie with ribbed cuffs, drop shoulders, relaxed fit, and natural fabric texture.",
-    imageUrl: "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=600&auto=format&fit=crop&q=80",
+    imageUrl: GARMENT_HOODIE_BASE64,
     badge: "Streetwear",
   },
   {
@@ -309,7 +316,7 @@ export const SAMPLE_GARMENTS: SampleGarment[] = [
     name: "Emerald Silk Slip Midi Dress",
     category: "dress",
     prompt: "Substitute the current outfit with an elegant emerald green silk slip midi dress with delicate straps, subtle cowl neckline, and fluid silhouette.",
-    imageUrl: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=600&auto=format&fit=crop&q=80",
+    imageUrl: GARMENT_DRESS_BASE64,
     badge: "Dress",
   },
   {
@@ -317,7 +324,7 @@ export const SAMPLE_GARMENTS: SampleGarment[] = [
     name: "Classic Washed Denim Jacket",
     category: "outerwear",
     prompt: "Substitute the current top with a classic light wash vintage denim trucker jacket with brass buttons and relaxed fit.",
-    imageUrl: "https://images.unsplash.com/photo-1576995853123-5a10305d93c0?w=600&auto=format&fit=crop&q=80",
+    imageUrl: GARMENT_DENIM_BASE64,
     badge: "Denim",
   },
 ]

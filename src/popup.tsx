@@ -5,6 +5,8 @@ import {
   setStoredApiKey,
   validateApiKey,
 } from "~lib/decart"
+import { getWardrobeItems } from "~lib/wardrobe"
+import { getLookbookItems } from "~lib/lookbook"
 import "./style.css"
 
 function Popup() {
@@ -16,15 +18,18 @@ function Popup() {
     valid: boolean
     error?: string
   } | null>(null)
+  const [wardrobeCount, setWardrobeCount] = useState<number>(0)
+  const [lookbookCount, setLookbookCount] = useState<number>(0)
 
   useEffect(() => {
     getStoredApiKey().then((key) => {
       setApiKey(key || DEFAULT_API_KEY)
-      // Check initial key validation
       if (key) {
         validateApiKey(key).then(setValidationResult)
       }
     })
+    getWardrobeItems().then((items) => setWardrobeCount(items.length))
+    getLookbookItems().then((items) => setLookbookCount(items.length))
   }, [])
 
   const handleSave = useCallback(async () => {
@@ -58,6 +63,14 @@ function Popup() {
     }
   }, [])
 
+  const handleOpenSidePanel = useCallback(async () => {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
+    if (tab?.id && (chrome as any).sidePanel?.open) {
+      await (chrome as any).sidePanel.open({ tabId: tab.id })
+      window.close()
+    }
+  }, [])
+
   return (
     <div
       style={{
@@ -73,89 +86,132 @@ function Popup() {
       {/* Header */}
       <div
         style={{
-          padding: "24px 22px 18px",
+          padding: "20px 22px 16px",
           borderBottom: "1px solid rgba(255,255,255,0.06)",
         }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div
             style={{
-              width: 38,
-              height: 38,
+              width: 40,
+              height: 40,
               borderRadius: 10,
               background: "linear-gradient(135deg, #00FF88, #00CC6A)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: 20,
+              fontSize: 22,
               boxShadow: "0 4px 16px rgba(0, 255, 136, 0.3)",
             }}>
             👗
           </div>
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <h1
-                style={{
-                  fontSize: 18,
-                  fontWeight: 700,
-                  margin: 0,
-                  letterSpacing: "-0.02em",
-                }}>
+              <h1 style={{ fontSize: 18, fontWeight: 700, margin: 0, letterSpacing: "-0.02em" }}>
                 OpenWear
               </h1>
               <span
                 style={{
                   fontSize: 10,
-                  padding: "2px 6px",
+                  padding: "2px 7px",
                   borderRadius: 9999,
                   background: "rgba(0, 255, 136, 0.15)",
                   color: "#00FF88",
-                  fontWeight: 600,
+                  fontWeight: 700,
+                  border: "1px solid rgba(0, 255, 136, 0.3)",
                 }}>
-                Lucy VTON
+                PRO VTON
               </span>
             </div>
-            <p
-              style={{
-                fontSize: 11,
-                color: "rgba(255,255,255,0.5)",
-                margin: "2px 0 0",
-              }}>
-              Realtime Virtual Try-On Assistant
+            <p style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", margin: "2px 0 0" }}>
+              Virtual Fitting Room & Studio Engine
             </p>
           </div>
         </div>
       </div>
 
       {/* Body */}
-      <div style={{ padding: "20px 22px" }}>
-        {/* Quick Launch Button */}
-        <button
-          onClick={handleOpenRoomOnTab}
-          style={{
-            width: "100%",
-            padding: "13px",
-            borderRadius: 12,
-            border: "none",
-            background: "linear-gradient(135deg, #00FF88, #00CC6A)",
-            color: "#000",
-            fontWeight: 700,
-            fontSize: 13,
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 8,
-            boxShadow: "0 4px 20px rgba(0, 255, 136, 0.25)",
-            marginBottom: 18,
-            transition: "transform 0.15s ease",
-          }}
-          onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.98)")}
-          onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}>
-          <span>👗</span>
-          <span>Open Fitting Room on this Page</span>
-        </button>
+      <div style={{ padding: "18px 22px" }}>
+        {/* Quick Launch Action Buttons */}
+        <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+          <button
+            onClick={handleOpenRoomOnTab}
+            style={{
+              flex: 1.2,
+              padding: "12px",
+              borderRadius: 10,
+              border: "none",
+              background: "linear-gradient(135deg, #00FF88, #00CC6A)",
+              color: "#000",
+              fontWeight: 700,
+              fontSize: 12,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+              boxShadow: "0 4px 18px rgba(0, 255, 136, 0.25)",
+            }}>
+            <span>👗</span>
+            <span>Open Fitting Room</span>
+          </button>
+          <button
+            onClick={handleOpenSidePanel}
+            title="Open docked in Chrome Side Panel"
+            style={{
+              flex: 1,
+              padding: "12px",
+              borderRadius: 10,
+              border: "1px solid rgba(255, 255, 255, 0.12)",
+              background: "rgba(255, 255, 255, 0.06)",
+              color: "#fff",
+              fontWeight: 600,
+              fontSize: 12,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+            }}>
+            <span>🪟</span>
+            <span>Side Panel</span>
+          </button>
+        </div>
 
-        {/* API Key Label */}
+        {/* Quick Metrics Row */}
+        <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+          <div
+            style={{
+              flex: 1,
+              background: "rgba(255, 255, 255, 0.04)",
+              borderRadius: 10,
+              padding: "10px 12px",
+              border: "1px solid rgba(255, 255, 255, 0.06)",
+            }}>
+            <div style={{ fontSize: 10, color: "rgba(255, 255, 255, 0.5)", textTransform: "uppercase" }}>
+              My Wardrobe
+            </div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: "#00FF88", marginTop: 2 }}>
+              {wardrobeCount} <span style={{ fontSize: 11, color: "#aaa", fontWeight: 400 }}>items</span>
+            </div>
+          </div>
+          <div
+            style={{
+              flex: 1,
+              background: "rgba(255, 255, 255, 0.04)",
+              borderRadius: 10,
+              padding: "10px 12px",
+              border: "1px solid rgba(255, 255, 255, 0.06)",
+            }}>
+            <div style={{ fontSize: 10, color: "rgba(255, 255, 255, 0.5)", textTransform: "uppercase" }}>
+              Saved Looks
+            </div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: "#fff", marginTop: 2 }}>
+              {lookbookCount} <span style={{ fontSize: 11, color: "#aaa", fontWeight: 400 }}>looks</span>
+            </div>
+          </div>
+        </div>
+
+        {/* API Key Label & Status */}
         <div
           style={{
             display: "flex",
@@ -262,7 +318,7 @@ function Popup() {
           </button>
         </div>
 
-        {/* Feature List Cards */}
+        {/* Guide */}
         <div
           style={{
             background: "rgba(255, 255, 255, 0.03)",
@@ -274,11 +330,12 @@ function Popup() {
             color: "rgba(255, 255, 255, 0.7)",
           }}>
           <div style={{ color: "#fff", fontWeight: 600, marginBottom: 4 }}>
-            How to use OpenWear:
+            OpenWear Studio Features:
           </div>
-          <div>1. Click the floating 👗 button on any website to open camera.</div>
-          <div>2. Hover over any clothing item or right-click to try on.</div>
-          <div>3. Or drag & drop any image into the fitting room drawer!</div>
+          <div>🎥 <strong>Live Cam</strong>: Realtime video try-on with Decart Lucy VTON</div>
+          <div>📷 <strong>Photo Studio</strong>: Try-on using 4 preset models or your photos</div>
+          <div>👗 <strong>My Wardrobe</strong>: Save garments with price from any web shop</div>
+          <div>📸 <strong>Lookbook</strong>: Save snapshots & export shareable polaroid cards</div>
         </div>
       </div>
 
@@ -292,7 +349,7 @@ function Popup() {
           display: "flex",
           justifyContent: "space-between",
         }}>
-        <span>Powered by Decart AI Lucy VTON</span>
+        <span>Decart AI Lucy VTON</span>
         <a
           href="https://platform.decart.ai"
           target="_blank"

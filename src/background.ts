@@ -4,8 +4,8 @@
  * Responsibilities:
  * 1. FETCH_BLOB / FETCH_IMAGE_BASE64 CORS proxy: fetches cross-origin images,
  *    converts to Blob and base64, and returns size + base64 data URL.
- * 2. Context menus: "Try On with OpenWear 👗" on any image and page.
- * 3. Message relay between content script and extension.
+ * 2. Context menus: "Try On with OpenWear 👗", "Save to My Wardrobe 👗", "Open Virtual Fitting Room 👗".
+ * 3. Wardrobe and Lookbook storage messaging relay.
  */
 
 import {
@@ -13,7 +13,18 @@ import {
   getStoredApiKey,
   setStoredApiKey,
   validateApiKey,
+  detectCategory,
 } from "~lib/decart"
+import {
+  getWardrobeItems,
+  saveWardrobeItem,
+  deleteWardrobeItem,
+} from "~lib/wardrobe"
+import {
+  getLookbookItems,
+  saveLookbookItem,
+  deleteLookbookItem,
+} from "~lib/lookbook"
 
 // --- Context Menus ---
 chrome.runtime.onInstalled.addListener(async () => {
@@ -26,6 +37,12 @@ chrome.runtime.onInstalled.addListener(async () => {
     chrome.contextMenus.create({
       id: "openwear-tryon-image",
       title: "Try On with OpenWear 👗",
+      contexts: ["image"],
+    })
+
+    chrome.contextMenus.create({
+      id: "openwear-save-wardrobe",
+      title: "Save to My Wardrobe 👗",
       contexts: ["image"],
     })
 
@@ -43,14 +60,33 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId === "openwear-tryon-image" && info.srcUrl) {
     try {
       const result = await fetchImageBlobAndBase64(info.srcUrl)
+      const title = info.srcUrl.split("/").pop()?.split("?")[0] || "Garment"
       await sendTabMessageWithFallback(tab.id, {
         type: "OPENWEAR_TRYON",
         imageBase64: result.base64,
         size: result.size,
         sourceUrl: info.srcUrl,
+        title,
       })
     } catch (err) {
       console.error("[OpenWear] Context menu image fetch failed:", err)
+    }
+  } else if (info.menuItemId === "openwear-save-wardrobe" && info.srcUrl) {
+    try {
+      const title = info.srcUrl.split("/").pop()?.split("?")[0] || "Designer Garment"
+      const category = detectCategory(title)
+      await saveWardrobeItem({
+        title,
+        category,
+        imageUrl: info.srcUrl,
+        storeName: tab.url ? new URL(tab.url).hostname.replace(/^www\./i, "") : "Web Store",
+        storeUrl: tab.url,
+      })
+      await sendTabMessageWithFallback(tab.id, {
+        type: "OPENWEAR_WARDROBE_UPDATED",
+      })
+    } catch (err) {
+      console.error("[OpenWear] Context menu wardrobe save failed:", err)
     }
   } else if (info.menuItemId === "openwear-open-room") {
     await sendTabMessageWithFallback(tab.id, {
@@ -61,19 +97,18 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 
 // --- Message Handlers ---
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  // Support both FETCH_BLOB and FETCH_IMAGE_BASE64
+  // CORS Proxy
   if (message.type === "FETCH_BLOB" || message.type === "FETCH_IMAGE_BASE64") {
     fetchImageBlobAndBase64(message.url)
-      .then((data) => {
-        sendResponse({ success: true, ...data })
-      })
+      .then((data) => sendResponse({ success: true, ...data }))
       .catch((err) => {
         console.error("[OpenWear Background] Image fetch failed:", err)
         sendResponse({ success: false, error: err?.message || "Fetch failed", size: 0 })
       })
-    return true // async response
+    return true
   }
 
+  // API Key Management
   if (message.type === "GET_API_KEY") {
     getStoredApiKey()
       .then((apiKey) => sendResponse({ apiKey }))
@@ -95,15 +130,67 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true
   }
 
-  if (message.type === "OPEN_SIDEPANEL" && sender.tab?.id) {
-    if ((chrome as any).sidePanel?.open) {
+  // Wardrobe Management
+  if (message.type === "GET_WARDROBE") {
+    getWardrobeItems()
+      .then((items) => sendResponse({ success: true, items }))
+      .catch((err) => sendResponse({ success: false, error: err?.message }))
+    return true
+  }
+
+  if (message.type === "SAVE_WARDROBE_ITEM") {
+    saveWardrobeItem(message.item)
+      .then((saved) => sendResponse({ success: true, item: saved }))
+      .catch((err) => sendResponse({ success: false, error: err?.message }))
+    return true
+  }
+
+  if (message.type === "DELETE_WARDROBE_ITEM") {
+    deleteWardrobeItem(message.id)
+      .then((items) => sendResponse({ success: true, items }))
+      .catch((err) => sendResponse({ success: false, error: err?.message }))
+    return true
+  }
+
+  // Lookbook Management
+  if (message.type === "GET_LOOKBOOK") {
+    getLookbookItems()
+      .then((items) => sendResponse({ success: true, items }))
+      .catch((err) => sendResponse({ success: false, error: err?.message }))
+    return true
+  }
+
+  if (message.type === "SAVE_LOOKBOOK_ITEM") {
+    saveLookbookItem(message.item)
+      .then((saved) => sendResponse({ success: true, item: saved }))
+      .catch((err) => sendResponse({ success: false, error: err?.message }))
+    return true
+  }
+
+  if (message.type === "DELETE_LOOKBOOK_ITEM") {
+    deleteLookbookItem(message.id)
+      .then((items) => sendResponse({ success: true, items }))
+      .catch((err) => sendResponse({ success: false, error: err?.message }))
+    return true
+  }
+
+  // Side Panel Trigger
+  if (message.type === "OPEN_SIDEPANEL") {
+    const tabId = sender.tab?.id
+    if (tabId && (chrome as any).sidePanel?.open) {
       ;(chrome as any).sidePanel
-        .open({ tabId: sender.tab.id })
+        .open({ tabId })
         .then(() => sendResponse({ success: true }))
-        .catch((e: any) => sendResponse({ success: false, error: e.message }))
+        .catch(() => {
+          chrome.tabs.create({ url: chrome.runtime.getURL("sidepanel.html") })
+          sendResponse({ success: true, fallbackTab: true })
+        })
+      return true
+    } else {
+      chrome.tabs.create({ url: chrome.runtime.getURL("sidepanel.html") })
+      sendResponse({ success: true, fallbackTab: true })
       return true
     }
-    sendResponse({ success: false, error: "Sidepanel API not supported" })
   }
 })
 
@@ -115,7 +202,6 @@ async function fetchImageBlobAndBase64(url: string): Promise<{
 }> {
   if (!url) throw new Error("No URL provided")
 
-  // Handle data URLs directly
   if (url.startsWith("data:image/")) {
     const parts = url.split(",")
     const mimeMatch = parts[0].match(/:(.*?);/)
@@ -134,7 +220,6 @@ async function fetchImageBlobAndBase64(url: string): Promise<{
 
   try {
     const response = await fetch(url, {
-      mode: "cors",
       credentials: "omit",
       signal: controller.signal,
     })
