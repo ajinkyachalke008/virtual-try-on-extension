@@ -324,7 +324,10 @@ function FittingRoom() {
         return
       }
       if (blob.type && !blob.type.startsWith("image/")) {
-        throw new Error(`Unsupported garment file type: ${blob.type}`)
+        setIsScanning(false)
+        showToast(`Unsupported garment file type: ${blob.type}`)
+        setStatusText("Unsupported image format")
+        return
       }
 
       setGarmentImage(base64)
@@ -417,8 +420,8 @@ function FittingRoom() {
           "Decart did not acknowledge the garment image within 35 seconds."
         )
 
-        setStatusText("Garment sent — waiting for the transformed video stream...")
         if (!hasRemoteStreamRef.current) {
+          setStatusText("Garment sent — waiting for the transformed video stream...")
           remoteStreamTimeoutRef.current = window.setTimeout(() => {
             remoteStreamTimeoutRef.current = null
             setIsScanning(false)
@@ -428,6 +431,11 @@ function FittingRoom() {
             sessionRef.current?.disconnect()
             sessionRef.current = null
           }, 30000)
+        } else {
+          setIsScanning(false)
+          setHasResult(true)
+          setDrawerState("tryon")
+          setStatusText("Live Try-On Active ✨")
         }
       } catch (err: any) {
         if (remoteStreamTimeoutRef.current !== null) {
