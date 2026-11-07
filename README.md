@@ -57,6 +57,12 @@ OpenWear offers **two complementary experiences**:
 
 ## 📸 Interface Showcase
 
+<p align="center">
+  <img src="docs/images/live-cam-vton-webrtc.png" width="920" alt="Decart Lucy VTON WebRTC Live Cam Mode" />
+  <br />
+  <em><b>Live Cam Mode</b>: Real-time peer-to-peer WebRTC streaming powered by Decart's <code>lucy-vton-latest</code> model with sub-second latency</em>
+</p>
+
 | 70:30 Desktop Split View | Live AI Try-On & Before/After Slider |
 |:---:|:---:|
 | <img src="docs/images/split-2-active-70-30.png" width="460" alt="True 70:30 Desktop Split" /> | <img src="docs/images/verify-3-tryon-result.png" width="460" alt="Try-On Result Slider" /> |
