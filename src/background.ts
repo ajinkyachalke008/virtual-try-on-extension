@@ -192,6 +192,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       return true
     }
   }
+
+  // Store Kiosk Fullscreen Mirror Trigger
+  if (message.type === "OPEN_KIOSK") {
+    chrome.tabs.create({ url: chrome.runtime.getURL("tabs/kiosk.html") })
+    sendResponse({ success: true })
+    return true
+  }
 })
 
 // --- CORS Image Fetcher: URL -> Blob -> Base64 ---

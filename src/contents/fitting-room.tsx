@@ -734,6 +734,26 @@ function FittingRoom() {
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <button
               onClick={() => {
+                chrome.runtime.sendMessage({ type: "OPEN_KIOSK" })
+              }}
+              style={{
+                background: "rgba(0, 255, 136, 0.12)",
+                border: "1px solid rgba(0, 255, 136, 0.3)",
+                color: "#00FF88",
+                width: 32,
+                height: 32,
+                borderRadius: 8,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 14,
+              }}
+              title="Launch Big Screen Store Kiosk (TV Mirror Mode)">
+              🖥️
+            </button>
+            <button
+              onClick={() => {
                 chrome.runtime.sendMessage({ type: "OPEN_SIDEPANEL" })
               }}
               style={{

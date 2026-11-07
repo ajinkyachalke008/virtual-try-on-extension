@@ -177,6 +177,29 @@ function Popup() {
           </button>
         </div>
 
+        {/* Launch Store Kiosk Fullscreen Mode */}
+        <button
+          onClick={() => chrome.tabs.create({ url: chrome.runtime.getURL("tabs/kiosk.html") })}
+          style={{
+            width: "100%",
+            marginBottom: 14,
+            padding: "11px 14px",
+            borderRadius: 10,
+            border: "1px solid rgba(0, 255, 136, 0.4)",
+            background: "rgba(0, 255, 136, 0.12)",
+            color: "#00FF88",
+            fontWeight: 700,
+            fontSize: 12,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+          }}>
+          <span>🖥️</span>
+          <span>Launch In-Store Kiosk (TV Mirror Mode)</span>
+        </button>
+
         {/* Quick Metrics Row */}
         <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
           <div
