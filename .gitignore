@@ -15,6 +15,7 @@ scratch/
 !docs/images/*.png
 *.log
 test-*-profile/
+.openwear_interactive_profile/
 
 # Environment files
 .env
