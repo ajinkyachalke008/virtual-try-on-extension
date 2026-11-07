@@ -28,9 +28,9 @@
 **OpenWear** is an open-source AI virtual fitting room and retail smart mirror platform. Built with **Plasmo (Manifest V3)**, **React 18**, **TypeScript**, and **Decart Lucy VTON WebRTC streaming**, OpenWear bridges the gap between digital e-commerce and physical retail apparel shopping.
 
 <p align="center">
-  <img src="docs/images/openwear-how-it-works.png" width="920" alt="How OpenWear Works - Stand, Select, Live Try-On" />
+  <img src="docs/images/openwear-how-it-works.png" width="920" alt="How OpenWear Works - Stand in Front of Camera, Pick Outfit from Catalog, Live Virtual Try-On with Before/After Slider" />
   <br />
-  <em><b>How OpenWear Works</b>: Stand in front of the camera, pick any garment, and see it instantly fitted on the smart mirror with realistic fabric drape.</em>
+  <em><b>How OpenWear Works</b>: 1. Stand in front of camera &bull; 2. Pick any outfit from the catalog tablet &bull; 3. See the garment live on the smart mirror with an interactive Before/After comparison.</em>
 </p>
 
 OpenWear offers **two complementary experiences**:
