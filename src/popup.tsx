@@ -7,6 +7,7 @@ import {
 } from "~lib/decart"
 import { getWardrobeItems } from "~lib/wardrobe"
 import { getLookbookItems } from "~lib/lookbook"
+import { broadcastKioskAction } from "~lib/kiosk-sync"
 import "./style.css"
 
 function Popup() {
@@ -182,7 +183,7 @@ function Popup() {
           onClick={() => chrome.tabs.create({ url: chrome.runtime.getURL("tabs/kiosk.html") })}
           style={{
             width: "100%",
-            marginBottom: 14,
+            marginBottom: 10,
             padding: "11px 14px",
             borderRadius: 10,
             border: "1px solid rgba(0, 255, 136, 0.4)",
@@ -199,6 +200,111 @@ function Popup() {
           <span>🖥️</span>
           <span>Launch In-Store Kiosk (TV Mirror Mode)</span>
         </button>
+
+        {/* In-Store TV Remote Controller Panel */}
+        <div
+          style={{
+            marginBottom: 16,
+            background: "rgba(255, 255, 255, 0.04)",
+            border: "1px solid rgba(0, 255, 136, 0.25)",
+            borderRadius: 12,
+            padding: "10px 12px",
+          }}>
+          <div
+            style={{
+              fontSize: 10,
+              fontWeight: 700,
+              color: "#00FF88",
+              textTransform: "uppercase",
+              letterSpacing: "0.06em",
+              marginBottom: 8,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}>
+            <span>TV Mirror Remote Controller</span>
+            <span>● Live Sync</span>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, marginBottom: 6 }}>
+            <button
+              onClick={() => broadcastKioskAction({ type: "NAVIGATE_OUTFIT", direction: "prev" })}
+              title="Previous Outfit on TV"
+              style={{
+                background: "rgba(255, 255, 255, 0.08)",
+                border: "1px solid rgba(255, 255, 255, 0.12)",
+                color: "#fff",
+                padding: "7px 0",
+                borderRadius: 6,
+                fontSize: 11,
+                fontWeight: 600,
+                cursor: "pointer",
+              }}>
+              ◀ Prev
+            </button>
+            <button
+              onClick={() => broadcastKioskAction({ type: "TRIGGER_SNAPSHOT" })}
+              title="Trigger 3-2-1 Photo on TV"
+              style={{
+                background: "linear-gradient(135deg, #00FF88, #00cc6a)",
+                border: "none",
+                color: "#000",
+                padding: "7px 0",
+                borderRadius: 6,
+                fontSize: 11,
+                fontWeight: 700,
+                cursor: "pointer",
+              }}>
+              📸 Snap
+            </button>
+            <button
+              onClick={() => broadcastKioskAction({ type: "NAVIGATE_OUTFIT", direction: "next" })}
+              title="Next Outfit on TV"
+              style={{
+                background: "rgba(255, 255, 255, 0.08)",
+                border: "1px solid rgba(255, 255, 255, 0.12)",
+                color: "#fff",
+                padding: "7px 0",
+                borderRadius: 6,
+                fontSize: 11,
+                fontWeight: 600,
+                cursor: "pointer",
+              }}>
+              Next ▶
+            </button>
+          </div>
+          <div style={{ display: "flex", gap: 6 }}>
+            <button
+              onClick={() => broadcastKioskAction({ type: "CLEAR_GARMENT" })}
+              title="Reset TV to plain camera mirror"
+              style={{
+                flex: 1,
+                background: "rgba(255, 255, 255, 0.05)",
+                border: "1px solid rgba(255, 255, 255, 0.1)",
+                color: "#aaa",
+                padding: "5px 0",
+                borderRadius: 6,
+                fontSize: 10,
+                cursor: "pointer",
+              }}>
+              ✕ Clear Outfit
+            </button>
+            <button
+              onClick={() => broadcastKioskAction({ type: "TOGGLE_FULLSCREEN" })}
+              title="Toggle Fullscreen on TV"
+              style={{
+                flex: 1,
+                background: "rgba(255, 255, 255, 0.05)",
+                border: "1px solid rgba(255, 255, 255, 0.1)",
+                color: "#aaa",
+                padding: "5px 0",
+                borderRadius: 6,
+                fontSize: 10,
+                cursor: "pointer",
+              }}>
+              ⛶ TV Fullscreen
+            </button>
+          </div>
+        </div>
 
         {/* Quick Metrics Row */}
         <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>

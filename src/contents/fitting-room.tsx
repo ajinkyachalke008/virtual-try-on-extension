@@ -52,6 +52,7 @@ import {
   activateSplitLayout,
   deactivateSplitLayout,
 } from "~lib/layout-manager"
+import { broadcastKioskAction } from "~lib/kiosk-sync"
 
 export const config: PlasmoCSConfig = {
   matches: ["<all_urls>"],
@@ -420,7 +421,19 @@ function FittingRoom() {
         }
       }
 
-      // 2. Route based on active tab
+      // 2. Broadcast to TV Mirror Kiosk if connected
+      try {
+        broadcastKioskAction({
+          type: "APPLY_GARMENT",
+          garmentSrc: base64,
+          title,
+          price,
+        })
+      } catch (e) {
+        // Safe ignore
+      }
+
+      // 3. Route based on active tab
       if (activeTab === "photo_studio") {
         await processPhotoTryOn(base64, title)
         return

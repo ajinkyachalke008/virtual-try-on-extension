@@ -11,6 +11,7 @@ import type { PlasmoCSConfig } from "plasmo"
 import { useState, useEffect, useRef, useCallback } from "react"
 import { detectCategory } from "~lib/decart"
 import { saveWardrobeItem } from "~lib/wardrobe"
+import { broadcastKioskAction } from "~lib/kiosk-sync"
 
 export const config: PlasmoCSConfig = {
   matches: ["<all_urls>"],
@@ -142,6 +143,7 @@ function HoverButton() {
   const [isHovered, setIsHovered] = useState(false)
   const [loading, setLoading] = useState(false)
   const [savedToast, setSavedToast] = useState(false)
+  const [castToast, setCastToast] = useState(false)
   const timeoutRef = useRef<number | null>(null)
   const lastTargetRef = useRef<HTMLImageElement | null>(null)
 
@@ -337,6 +339,21 @@ function HoverButton() {
     [targetSrc, metadata]
   )
 
+  const handleCastToTV = useCallback(async () => {
+    try {
+      broadcastKioskAction({
+        type: "APPLY_GARMENT",
+        garmentSrc: targetSrc,
+        title: metadata.title,
+        price: metadata.price,
+      })
+      setCastToast(true)
+      setTimeout(() => setCastToast(false), 2200)
+    } catch (err) {
+      console.error("[OpenWear] Cast to TV error:", err)
+    }
+  }, [targetSrc, metadata])
+
   if (!visible) return null
 
   return (
@@ -466,6 +483,33 @@ function HoverButton() {
           }}>
           <span>{savedToast ? "✓" : "➕"}</span>
           <span>{savedToast ? "Saved!" : "Wardrobe"}</span>
+        </button>
+
+        {/* Cast to TV Mirror Button */}
+        <button
+          onClick={handleCastToTV}
+          title="Send outfit to Big Screen TV Mirror"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 4,
+            padding: "7px 11px",
+            background: castToast
+              ? "rgba(0, 255, 136, 0.9)"
+              : "rgba(0, 255, 136, 0.12)",
+            color: castToast ? "#000" : "#00FF88",
+            border: "1px solid rgba(0, 255, 136, 0.35)",
+            borderRadius: 9999,
+            fontSize: 12,
+            fontWeight: 600,
+            fontFamily:
+              "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+            cursor: "pointer",
+            transition: "all 0.18s ease",
+            whiteSpace: "nowrap",
+          }}>
+          <span>🖥️</span>
+          <span>{castToast ? "Sent to TV!" : "Cast TV"}</span>
         </button>
       </div>
     </>

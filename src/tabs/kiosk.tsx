@@ -32,8 +32,13 @@ import {
   generateBrandedLookCard,
   downloadImage,
 } from "~lib/lookbook"
+import { listenKioskAction, type KioskAction } from "~lib/kiosk-sync"
 
 export default function KioskPage() {
+  // Remote Controller Sync
+  const [remoteMessage, setRemoteMessage] = useState<string | null>(null)
+  const remoteTimerRef = useRef<number | null>(null)
+
   // Video and Stream State
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -280,6 +285,44 @@ export default function KioskPage() {
     }
   }, [])
 
+  // Remote Toast Notification on TV
+  const showRemoteNotice = useCallback((msg: string) => {
+    setRemoteMessage(msg)
+    if (remoteTimerRef.current) clearTimeout(remoteTimerRef.current)
+    remoteTimerRef.current = window.setTimeout(() => setRemoteMessage(null), 3600)
+  }, [])
+
+  // Subscribe to Remote Actions from Laptop Controller
+  useEffect(() => {
+    const unsubscribe = listenKioskAction((action: KioskAction) => {
+      console.log("[OpenWear Kiosk TV] Received remote command from laptop:", action)
+
+      if (action.type === "APPLY_GARMENT") {
+        showRemoteNotice(`📲 Outfit selected from Laptop: ${action.title}`)
+        applyOutfit(action.garmentSrc, action.title)
+      } else if (action.type === "CLEAR_GARMENT") {
+        showRemoteNotice("🔄 Outfit cleared from Laptop")
+        clearOutfit()
+      } else if (action.type === "TRIGGER_SNAPSHOT") {
+        showRemoteNotice("📸 Photo requested from Laptop!")
+        triggerCountdownSnapshot()
+      } else if (action.type === "NAVIGATE_OUTFIT") {
+        if (action.direction === "next") {
+          setSelectedOutfitIndex((prev) => (prev + 1) % (outfits.length || 1))
+        } else {
+          setSelectedOutfitIndex((prev) => (prev - 1 + outfits.length) % (outfits.length || 1))
+        }
+      } else if (action.type === "TOGGLE_FULLSCREEN") {
+        toggleFullscreen()
+      }
+    })
+
+    return () => {
+      unsubscribe()
+      if (remoteTimerRef.current) clearTimeout(remoteTimerRef.current)
+    }
+  }, [applyOutfit, clearOutfit, triggerCountdownSnapshot, toggleFullscreen, outfits.length, showRemoteNotice])
+
   // TV Remote & Keyboard Navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -423,6 +466,34 @@ export default function KioskPage() {
         </div>
       )}
 
+      {/* Remote Message Banner from Laptop */}
+      {remoteMessage && (
+        <div
+          style={{
+            position: "absolute",
+            top: 24,
+            left: "50%",
+            transform: "translateX(-50%)",
+            background: "rgba(10, 10, 14, 0.94)",
+            border: "1.5px solid #00FF88",
+            boxShadow: "0 10px 40px rgba(0, 255, 136, 0.4)",
+            color: "#fff",
+            padding: "10px 24px",
+            borderRadius: 9999,
+            fontSize: 15,
+            fontWeight: 700,
+            zIndex: 105,
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            backdropFilter: "blur(16px)",
+            pointerEvents: "none",
+          }}>
+          <span>⚡</span>
+          <span>{remoteMessage}</span>
+        </div>
+      )}
+
       {/* 4. Top Store Header Bar (Auto-hideable with 'H') */}
       {!hideUI && (
         <div
@@ -442,16 +513,31 @@ export default function KioskPage() {
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
             <span style={{ fontSize: 32 }}>👗</span>
             <div>
-              <h1
-                style={{
-                  fontSize: 22,
-                  fontWeight: 800,
-                  margin: 0,
-                  letterSpacing: "0.02em",
-                  textTransform: "uppercase",
-                }}>
-                {storeName}
-              </h1>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <h1
+                  style={{
+                    fontSize: 22,
+                    fontWeight: 800,
+                    margin: 0,
+                    letterSpacing: "0.02em",
+                    textTransform: "uppercase",
+                  }}>
+                  {storeName}
+                </h1>
+                <span
+                  style={{
+                    background: "rgba(0, 255, 136, 0.15)",
+                    border: "1px solid rgba(0, 255, 136, 0.3)",
+                    color: "#00FF88",
+                    padding: "3px 8px",
+                    borderRadius: 9999,
+                    fontSize: 10,
+                    fontWeight: 700,
+                    letterSpacing: "0.05em",
+                  }}>
+                  ● LAPTOP SYNC ACTIVE
+                </span>
+              </div>
               <span style={{ fontSize: 13, color: "rgba(255, 255, 255, 0.65)", fontWeight: 500 }}>
                 OpenWear Smart Virtual Fitting Mirror
               </span>

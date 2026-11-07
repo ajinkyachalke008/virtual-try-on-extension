@@ -199,6 +199,22 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     sendResponse({ success: true })
     return true
   }
+
+  // Cross-Tab Broadcast Bridge for Store Kiosk (Laptop -> TV Mirror)
+  if (message.type === "BROADCAST_KIOSK_ACTION") {
+    chrome.tabs.query({}, (tabs) => {
+      tabs.forEach((tab) => {
+        if (tab.id) {
+          chrome.tabs.sendMessage(tab.id, {
+            type: "KIOSK_REMOTE_ACTION",
+            action: message.action,
+          }).catch(() => {})
+        }
+      })
+    })
+    sendResponse({ success: true })
+    return true
+  }
 })
 
 // --- CORS Image Fetcher: URL -> Blob -> Base64 ---
