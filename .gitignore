@@ -11,6 +11,8 @@ dist/
 scratch/
 *.png
 !assets/*.png
+!assets/**/*.png
+!docs/images/*.png
 *.log
 test-*-profile/
 

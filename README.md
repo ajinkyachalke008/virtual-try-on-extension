@@ -15,7 +15,8 @@
     <a href="#-tech-stack"><img src="https://img.shields.io/badge/Framework-Plasmo-9B51E0?style=for-the-badge&logo=react&logoColor=white" alt="Plasmo Framework" /></a>
     <a href="#-tech-stack"><img src="https://img.shields.io/badge/AI_Engine-Decart_Lucy_VTON-00FF88?style=for-the-badge&logo=webrtc&logoColor=black" alt="Decart Lucy VTON" /></a>
     <a href="#-tech-stack"><img src="https://img.shields.io/badge/Language-TypeScript_Strict-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" /></a>
-    <a href="#-license"><img src="https://img.shields.io/badge/License-MIT-F5A623?style=for-the-badge" alt="License MIT" /></a>
+    <a href="#-sponsorship--support"><img src="https://img.shields.io/badge/Sponsor-GitHub_Sponsors-EA4AAA?style=for-the-badge&logo=githubsponsors&logoColor=white" alt="GitHub Sponsors" /></a>
+    <a href="#-license--commercial-use"><img src="https://img.shields.io/badge/License-MIT-F5A623?style=for-the-badge" alt="License MIT" /></a>
   </p>
 
 </div>
@@ -222,6 +223,46 @@ node test-decart-ws.js
 
 ---
 
-## 📄 License
+## 💖 Sponsorship & Support
 
-This project is licensed under the [MIT License](LICENSE).
+OpenWear is an independent open-source project dedicated to making generative AI virtual try-on and smart mirrors accessible to everyone — from individual online shoppers to local boutique fashion stores.
+
+### Why Sponsor OpenWear?
+- **Real-Time GPU Compute**: Supporting community testing tokens for Decart Lucy VTON WebRTC streams.
+- **Retail Hardware Guides**: Funding testing and open-source documentation for diverse TV displays, camera mounts, and touchscreens.
+- **Continuous Development**: Enabling features like offline Edge-AI models, barcode scanning, and multi-store catalog sync.
+
+### Sponsor Tiers & Perks
+
+| Tier | Monthly | Perks |
+| :--- | :--- | :--- |
+| ☕ **Coffee Backer** | \$5 / mo | Name listed in the project README & backer credits |
+| 🌟 **Fashion Tech Enthusiast** | \$25 / mo | Early access to experimental builds, Discord VIP role |
+| 🏪 **Boutique Retail Sponsor** | \$100 / mo | 1-on-1 setup assistance for in-store TV kiosks & custom branding |
+| 🏢 **Enterprise Partner** | \$500 / mo | Direct technical consultation, custom model integration, priority roadmap issues |
+
+<p align="center">
+  <a href="https://github.com/sponsors/ajinkyachalke008">
+    <img src="https://img.shields.io/badge/Sponsor_on-GitHub_Sponsors-EA4AAA?style=for-the-badge&logo=githubsponsors&logoColor=white" alt="Sponsor on GitHub" />
+  </a>
+  &nbsp;&nbsp;
+  <a href="https://buymeacoffee.com/ajinkyachalke">
+    <img src="https://img.shields.io/badge/Buy_Me_a_Coffee-FFDD00?style=for-the-badge&logo=buymeacoffee&logoColor=black" alt="Buy Me A Coffee" />
+  </a>
+</p>
+
+---
+
+## 📄 License & Commercial Use
+
+OpenWear is proudly licensed under the **[MIT License](LICENSE)**:
+
+- ✅ **Free for Personal Use**: Use the browser extension on any shopping website without restrictions.
+- ✅ **Free for Commercial Retail Use**: Boutique shops, clothing stores, and fashion brands can deploy the In-Store Smart Mirror Kiosk in their retail spaces without paying software licensing fees.
+- ✅ **Open Modification**: You are welcome to fork, customize branding, and build proprietary additions for your store chain.
+
+---
+
+<div align="center">
+  <sub>Built with ❤️ by <a href="https://github.com/ajinkyachalke008">Ajinkya Chalke</a> & the OpenWear community.</sub>
+</div>
