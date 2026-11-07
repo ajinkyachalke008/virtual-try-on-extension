@@ -5,7 +5,7 @@
  * Runs in the chrome-extension:// origin with unrestricted camera permissions.
  * Includes:
  * 1. 🎥 Live Cam: Decart Lucy VTON WebRTC streaming
- * 2. 📷 Photo Studio: Dual-mode engine on 4 preset models or custom upload
+ * 2. 📷 Photo Studio: Dual-mode engine on 5 preset models or custom upload
  * 3. 👗 My Wardrobe: Persistent wardrobe management
  * 4. 📸 Lookbook: HD snapshot gallery and downloads
  */

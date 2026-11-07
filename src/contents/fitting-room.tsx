@@ -3,7 +3,7 @@
  *
  * All-in-One AI Virtual Fitting Room:
  * 1. 🎥 Live Cam: Decart Lucy VTON Realtime WebRTC low-latency streaming
- * 2. 📷 Photo Studio: Dual-engine try-on on 4 preset models or custom photos
+ * 2. 📷 Photo Studio: Dual-engine try-on on 5 preset models or custom photos
  * 3. 👗 My Wardrobe: Persistent wardrobe management with category filters
  * 4. 📸 Lookbook: HD snapshot capture, social cards, and download studio
  */

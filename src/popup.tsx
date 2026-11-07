@@ -462,7 +462,7 @@ function Popup() {
             OpenWear Studio Features:
           </div>
           <div>🎥 <strong>Live Cam</strong>: Realtime video try-on with Decart Lucy VTON</div>
-          <div>📷 <strong>Photo Studio</strong>: Try-on using 4 preset models or your photos</div>
+          <div>📷 <strong>Photo Studio</strong>: Try-on using 5 preset models or your photos</div>
           <div>👗 <strong>My Wardrobe</strong>: Save garments with price from any web shop</div>
           <div>📸 <strong>Lookbook</strong>: Save snapshots & export shareable polaroid cards</div>
         </div>

@@ -27,6 +27,12 @@
 
 **OpenWear** is an open-source AI virtual fitting room and retail smart mirror platform. Built with **Plasmo (Manifest V3)**, **React 18**, **TypeScript**, and **Decart Lucy VTON WebRTC streaming**, OpenWear bridges the gap between digital e-commerce and physical retail apparel shopping.
 
+<p align="center">
+  <img src="docs/images/openwear-how-it-works.png" width="920" alt="How OpenWear Works - Stand, Select, Live Try-On" />
+  <br />
+  <em><b>How OpenWear Works</b>: Stand in front of the camera, pick any garment, and see it instantly fitted on the smart mirror with realistic fabric drape.</em>
+</p>
+
 OpenWear offers **two complementary experiences**:
 
 1. **🛍️ Browser Shopping Companion**: Hover over any clothing item on Zara, Amazon, Myntra, ASOS, or H&M to instantly try it on. Features a **true 70:30 desktop reflow layout** where the store stays 70% visible while the fitting room occupies 30% on the right.
@@ -38,7 +44,7 @@ OpenWear offers **two complementary experiences**:
 
 ### 1. Dual-Experience Virtual Fitting Engine
 - **🎥 Live Cam Mode**: Real-time peer-to-peer WebRTC streaming powered by Decart's `lucy-vton-latest` model. Transposes garments onto your live webcam feed with sub-second latency and zero on-screen watermarks.
-- **📷 Offline Photo Studio**: Try garments on without a camera using 4 bundled photorealistic model presets (Elena, Marcus, Alex, Maya) or by uploading your own photo.
+- **📷 Offline Photo Studio**: Try garments on without a camera using 5 bundled photorealistic model presets (Elena, Marcus, Alex, Maya, and Jordan — American Casual) or by uploading your own photo.
 - **⇄ Before/After Comparison Slider**: Drag an interactive slider handle across the try-on result to compare the original outfit against the virtual garment.
 
 ### 2. Retail Smart Mirror Kiosk & Dual-Screen Sync
@@ -68,10 +74,10 @@ OpenWear offers **two complementary experiences**:
 | <img src="docs/images/split-2-active-70-30.png" width="460" alt="True 70:30 Desktop Split" /> | <img src="docs/images/verify-3-tryon-result.png" width="460" alt="Try-On Result Slider" /> |
 | *Shopping store reflows into 70% width without overlay clipping* | *Realtime virtual garment drape with comparison handle* |
 
-| Offline Photo Studio (4 Preset Models) | My Wardrobe Collection & Scraper |
+| Offline Photo Studio (5 Preset Models) | My Wardrobe Collection & Scraper |
 |:---:|:---:|
 | <img src="docs/images/verify-2-photo-studio.png" width="460" alt="Photo Studio Presets" /> | <img src="docs/images/verify-5-wardrobe.png" width="460" alt="My Wardrobe Collection" /> |
-| *Elena, Marcus, Alex & Maya with custom photo upload* | *Saved garments with live price extraction and 1-click try-on* |
+| *Elena, Marcus, Alex, Maya & Jordan (American Casual)* | *Saved garments with live price extraction and 1-click try-on* |
 
 ---
 

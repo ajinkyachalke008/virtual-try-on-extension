@@ -17,6 +17,7 @@ import {
   MODEL_MARCUS_BASE64,
   MODEL_ALEX_BASE64,
   MODEL_MAYA_BASE64,
+  MODEL_JORDAN_BASE64,
 } from "./preset-models-data"
 
 export interface PresetModel {
@@ -99,6 +100,22 @@ export const PRESET_MODELS: PresetModel[] = [
       dressHeight: 0.64,
       lowerTop: 0.67,
       lowerHeight: 0.33,
+    },
+  },
+  {
+    id: "model-jordan",
+    name: "Jordan",
+    label: "American Casual",
+    tag: "Classic American Fit",
+    gender: "neutral",
+    imageUrl: MODEL_JORDAN_BASE64,
+    torsoAnchor: {
+      upperTop: 0.36,
+      upperHeight: 0.45,
+      upperWidth: 0.62,
+      dressHeight: 0.62,
+      lowerTop: 0.68,
+      lowerHeight: 0.32,
     },
   },
 ]
