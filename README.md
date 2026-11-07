@@ -20,7 +20,12 @@ OpenWear is an advanced AI virtual fitting room extension built with **Plasmo**,
   - 1-click HD PNG download and local lookbook gallery.
 - **🛍️ Smart Dual Hover Scraper**:
   - Automatically identifies clothing photos on shopping sites (Amazon, Zara, Myntra, ASOS, H&M, etc.).
-  - Floating dual action pill: **"👗 Try On"** (with live scraped price tag) and **"➕ Wardrobe"**.
+  - Floating action pill: **"👗 Try On"**, **"➕ Wardrobe"**, and **"🖥️ Cast TV"**.
+- **🖥️ In-Store Smart Mirror Kiosk & Dual-Screen Sync**:
+  - Fullscreen 100% edge-to-edge mirror display (`tabs/kiosk.html`) built for 32"–55" retail displays.
+  - Dual-screen real-time sync: laptop acts as the associate console, casting outfits to the TV mirror instantly.
+  - Photobooth 3-2-1 countdown flash & "Scan QR to Take Photo Home" modal for in-store shoppers.
+  - Remote controller console in the extension popup for wireless TV control.
 - **Side Panel Drawer & Native SidePanel**:
   - Zero CSS leaking via Shadow DOM (`openwear-fitting-room`).
   - Full-featured companion in Chrome's native Side Panel (`sidepanel.html`).
