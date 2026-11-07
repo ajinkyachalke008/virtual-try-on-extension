@@ -101,7 +101,7 @@ function SidePanel() {
         videoRef.current.srcObject = stream
         await videoRef.current.play()
       }
-      setStatusText("Ready for garments")
+      setStatusText("")
     } catch (err: any) {
       setError(`Camera error: ${err.message}. Switch to Photo Studio 📷.`)
     }
@@ -149,12 +149,12 @@ function SidePanel() {
         const category = detectCategory(title)
 
         if (sessionRef.current?.realtimeClient?.isConnected?.()) {
-          setStatusText("Updating garment...")
+          setStatusText("Applying outfit...")
           await applyTryOn(sessionRef.current.realtimeClient, blob, category, title)
           setTimeout(() => {
             setIsScanning(false)
             setHasResult(true)
-            setStatusText("Try-On Complete ✨")
+            setStatusText("")
           }, 1200)
           return
         }
@@ -169,7 +169,7 @@ function SidePanel() {
             }
             setIsScanning(false)
             setHasResult(true)
-            setStatusText("Try-On Complete ✨")
+            setStatusText("")
           },
           { image: blob, prompt: title }
         )
@@ -214,7 +214,7 @@ function SidePanel() {
           )
           setPhotoTryOnResult(result)
           setHasResult(true)
-          setStatusText("Photo Try-On Complete ✨")
+          setStatusText("")
         } else {
           const apiKey = await getStoredApiKey()
           if (!apiKey) throw new Error("Decart API Key required.")
@@ -236,7 +236,7 @@ function SidePanel() {
                 videoRef.current.play().catch(console.error)
               }
               setHasResult(true)
-              setStatusText("WebRTC Photo Try-On Active ✨")
+              setStatusText("")
             },
             { image: blob, prompt: title }
           )
@@ -440,20 +440,24 @@ function SidePanel() {
                 📸
               </button>
             )}
-            <div
-              style={{
-                position: "absolute",
-                bottom: 10,
-                left: "50%",
-                transform: "translateX(-50%)",
-                background: "rgba(0,0,0,0.8)",
-                padding: "4px 12px",
-                borderRadius: 9999,
-                fontSize: 11,
-                color: "#00FF88",
-              }}>
-              {statusText}
-            </div>
+            {!hasResult && isScanning && statusText && (
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: 10,
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  background: "#00FF88",
+                  color: "#000",
+                  padding: "4px 12px",
+                  borderRadius: 9999,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  pointerEvents: "none",
+                }}>
+                {statusText}
+              </div>
+            )}
           </div>
         </div>
       )}

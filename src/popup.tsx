@@ -349,7 +349,7 @@ function Popup() {
           display: "flex",
           justifyContent: "space-between",
         }}>
-        <span>Decart AI Lucy VTON</span>
+        <span>OpenWear Virtual Fitting Studio</span>
         <a
           href="https://platform.decart.ai"
           target="_blank"

@@ -211,7 +211,7 @@ export async function generateBrandedLookCard(
 
   ctx.font = "600 20px 'Inter', -apple-system, sans-serif"
   ctx.fillStyle = "#00FF88"
-  ctx.fillText("AI VIRTUAL FITTING ROOM", cardWidth - 360, 74)
+  ctx.fillText("VIRTUAL FITTING ROOM", cardWidth - 310, 74)
 
   // 4. Footer Metadata Area
   const footerY = 1075
@@ -233,11 +233,6 @@ export async function generateBrandedLookCard(
   ctx.font = "600 22px 'Inter', -apple-system, sans-serif"
   ctx.fillStyle = "rgba(255, 255, 255, 0.65)"
   ctx.fillText(`${categoryStr}  •  ${dateStr}${item.storeName ? `  •  ${item.storeName}` : ""}`, 54, footerY + 85)
-
-  // Watermark Tag
-  ctx.font = "600 18px 'Inter', -apple-system, sans-serif"
-  ctx.fillStyle = "rgba(0, 255, 136, 0.85)"
-  ctx.fillText("TRY CLOTHES ON IN REALTIME AT ANY STORE", 54, footerY + 130)
 
   return canvas.toDataURL("image/png", 0.95)
 }

@@ -177,7 +177,7 @@ function FittingRoom() {
       fallbackTimerRef.current = window.setTimeout(() => {
         setPersonCentered(true)
         setDrawerState("ready")
-        setStatusText("Ready for garments")
+        setStatusText("")
       }, 2000)
 
       return true
@@ -280,12 +280,12 @@ function FittingRoom() {
 
         // If an active session already exists, swap outfit immediately
         if (sessionRef.current?.realtimeClient?.isConnected?.()) {
-          setStatusText("Switching outfit via Decart Lucy...")
+          setStatusText("Applying outfit...")
           await applyTryOn(sessionRef.current.realtimeClient, blob, category, title)
           setTimeout(() => {
             setIsScanning(false)
             setHasResult(true)
-            setStatusText("Try-On Complete ✨")
+            setStatusText("")
           }, 1200)
           return
         }
@@ -302,7 +302,7 @@ function FittingRoom() {
             }
             setIsScanning(false)
             setHasResult(true)
-            setStatusText("Try-On Complete ✨")
+            setStatusText("")
           },
           { image: blob, prompt }
         )
@@ -351,7 +351,7 @@ function FittingRoom() {
           )
           setPhotoTryOnResult(resultDataUrl)
           setHasResult(true)
-          setStatusText("Photo Try-On Complete ✨")
+          setStatusText("")
         } else {
           // WebRTC Stream Bridge into Decart Lucy
           const permanentKey = await getStoredApiKey()
@@ -381,7 +381,7 @@ function FittingRoom() {
               }
               setHasResult(true)
               setIsPhotoRendering(false)
-              setStatusText("WebRTC Photo Try-On Active ✨")
+              setStatusText("")
             },
             { image: blob, prompt }
           )
@@ -724,21 +724,9 @@ function FittingRoom() {
                 <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0, letterSpacing: "-0.01em" }}>
                   OpenWear
                 </h2>
-                <span
-                  style={{
-                    background: "rgba(0, 255, 136, 0.15)",
-                    color: "#00FF88",
-                    fontSize: 10,
-                    fontWeight: 700,
-                    padding: "2px 7px",
-                    borderRadius: 9999,
-                    border: "1px solid rgba(0, 255, 136, 0.3)",
-                  }}>
-                  PRO VTON
-                </span>
               </div>
               <p style={{ fontSize: 11, color: "rgba(255, 255, 255, 0.5)", margin: "2px 0 0" }}>
-                Interactive Virtual Fitting Room
+                Virtual Fitting Room
               </p>
             </div>
           </div>
@@ -1079,33 +1067,32 @@ function FittingRoom() {
                 </button>
               )}
 
-              {/* Status Pill */}
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: 12,
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                  zIndex: 35,
-                  display: "flex",
-                  gap: 8,
-                }}>
-                {statusText && (
+              {/* Transient Scanning Pill - Completely hidden during active wearing */}
+              {!hasResult && isScanning && statusText && (
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: 12,
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    zIndex: 35,
+                    pointerEvents: "none",
+                  }}>
                   <div
                     style={{
-                      background: isScanning ? "#00FF88" : "rgba(0, 0, 0, 0.82)",
-                      color: isScanning ? "#000" : "#fff",
-                      border: isScanning ? "none" : "1px solid rgba(0, 255, 136, 0.4)",
+                      background: "#00FF88",
+                      color: "#000",
                       padding: "6px 14px",
                       borderRadius: 9999,
                       fontSize: 11,
                       fontWeight: 700,
                       whiteSpace: "nowrap",
+                      boxShadow: "0 2px 10px rgba(0, 255, 136, 0.4)",
                     }}>
                     {statusText}
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -1667,7 +1654,7 @@ function FittingRoom() {
               </div>
               <div style={{ fontSize: 10, color: "#00FF88" }}>
                 {garmentPrice ? `${garmentPrice} • ` : ""}
-                {hasResult ? "Active on Model" : "Applying..."}
+                {hasResult ? (activeTab === "live_cam" ? "Wearing Live" : "Active on Model") : "Applying..."}
               </div>
             </div>
             <button
@@ -1787,7 +1774,7 @@ function FittingRoom() {
             alignItems: "center",
             justifyContent: "space-between",
           }}>
-          <span>Decart Lucy VTON + Studio Engine</span>
+          <span>OpenWear Virtual Fitting Room</span>
           <span>Drag clothes from any tab</span>
         </div>
       </div>
